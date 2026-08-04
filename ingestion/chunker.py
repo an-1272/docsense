@@ -1,7 +1,7 @@
 # ingestion/chunker.py
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def chunk_pages(pages: list[dict], chunk_size=1000, chunk_overlap=200) -> list[dict]:
+def chunk_pages(pages: list[dict], chunk_size=400, chunk_overlap=80) -> list[dict]:
     """
     Takes parsed page dicts, returns a flat list of chunk dicts.
     Each chunk: { 'text': str, 'source': str, 'page': int, 'chunk_id': str }

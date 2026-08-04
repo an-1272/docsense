@@ -73,13 +73,24 @@ with st.sidebar:
                 st.session_state.ingested_files.append(uploaded_file.name)
                 st.success(f'✅ {uploaded_file.name} — {n} chunks indexed')
 
-    # ── Ingested files list ───────────────────────────
+# ── Ingested files list ───────────────────────────
     if st.session_state.ingested_files:
         st.divider()
         st.caption('Indexed documents:')
         for fname in st.session_state.ingested_files:
             st.markdown(f'• {fname}')
-            st.divider()
+
+    # ── Retrieval settings ────────────────────────────
+    st.divider()
+    st.caption('Retrieval settings')
+    rerank_enabled = st.toggle(
+        'Enable re-ranking (Cohere)',
+        value=True,
+        help='Two-stage retrieval: similarity search → Cohere Rerank. Higher quality, one extra API call per query.'
+    )
+
+    # ── Clear conversation ────────────────────────────
+    st.divider()
     if st.button('🗑  Clear conversation', use_container_width=True):
         st.session_state.messages = []
         st.rerun()
@@ -126,7 +137,7 @@ with col_chat:
             with st.chat_message('assistant'):
                 with st.spinner('Searching documents...'):
                     try:
-                        result = ask(prompt)
+                        result = ask(prompt, rerank_enabled=rerank_enabled)
                     except Exception as e:
                         result = {
                             'answer': f'Something went wrong while generating the answer. Please try again.',
@@ -136,6 +147,9 @@ with col_chat:
                         st.error(f'Error: {str(e)}')
                 st.markdown(result['answer'])
                 st.caption(confidence_badge(result['confidence']))
+                mode_label = '🔄 Re-ranked' if result.get('rerank_enabled') else '🔍 Similarity only'
+                st.caption(mode_label)
+
 
 
             # Store in history
