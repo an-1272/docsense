@@ -1,3 +1,4 @@
+# generation/generator.py — updated generate_answer() signature and prompt
 from openai import OpenAI
 from dotenv import load_dotenv
 from generation.prompts import SYSTEM_PROMPT
@@ -8,24 +9,18 @@ client = OpenAI()
 
 CONFIDENCE_THRESHOLD = 0.45
 
-def generate_answer(query: str, chunks: list[dict]) -> dict:
+def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
     """
     Generate a grounded, cited answer from retrieved chunks.
-    Returns a dict with 'answer', 'sources', and 'confidence'.
+    Accepts optional conversation history string for multi-turn support.
     """
-    # No chunks returned at all
     if not chunks:
         return {
             'answer': 'I could not find a reliable answer to that in the provided documents.',
             'sources': [],
             'confidence': 'low'
         }
-    # DEBUG — add these two lines temporarily
-    #print(f"DEBUG: chunks[0] keys: {chunks[0].keys()}")
-    #print(f"DEBUG: relevance_score = {chunks[0].get('relevance_score')}")
-    #print(f"DEBUG: distance = {chunks[0].get('distance')}")
 
-    # Use relevance_score if re-ranked, otherwise use distance
     if 'relevance_score' in chunks[0]:
         low_confidence = chunks[0]['relevance_score'] < 0.1
     else:
@@ -39,9 +34,16 @@ def generate_answer(query: str, chunks: list[dict]) -> dict:
         }
 
     context = build_context(chunks)
-    user_message = f'Context passages:\n{context}\n\nQuestion: {query}'
-    # DEBUG
-    #print(f"DEBUG context preview:\n{user_message[:1000]}")
+
+    # Build user message — include history if available
+    if history:
+        user_message = (
+            f'Previous conversation:\n{history}\n\n'
+            f'Context passages:\n{context}\n\n'
+            f'Question: {query}'
+        )
+    else:
+        user_message = f'Context passages:\n{context}\n\nQuestion: {query}'
 
     response = client.chat.completions.create(
         model='gpt-4o-mini',
@@ -52,10 +54,7 @@ def generate_answer(query: str, chunks: list[dict]) -> dict:
         ]
     )
 
-    sources = [
-        {'source': c['source'], 'page': c['page']}
-        for c in chunks
-    ]
+    sources = [{'source': c['source'], 'page': c['page']} for c in chunks]
 
     if 'relevance_score' in chunks[0]:
         confidence = 'high' if chunks[0]['relevance_score'] > 0.5 else 'medium'
@@ -67,4 +66,3 @@ def generate_answer(query: str, chunks: list[dict]) -> dict:
         'sources': sources,
         'confidence': confidence
     }
-

@@ -3,6 +3,12 @@ from pipeline import ask
 from ingestion import ingest
 import tempfile
 import os
+import uuid
+from generation.memory import create_memory
+from db.sessions import init_db, save_session, load_session, delete_session
+
+# Initialise the database on app startup
+init_db()
 
 # ── Page config ──────────────────────────────────────────
 st.set_page_config(
@@ -18,29 +24,34 @@ if 'ingested_files' not in st.session_state:
     st.session_state.ingested_files = []
 if 'demo_mode' not in st.session_state:
     st.session_state.demo_mode = False
+if 'memory' not in st.session_state:
+    st.session_state.memory = create_memory()
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+    stored = load_session(st.session_state.session_id)
+    if stored:
+        st.session_state.messages = stored
 
-# ── Layout ───────────────────────────────────────────────
+# ── Helpers ──────────────────────────────────────────────
+def confidence_badge(level: str) -> str:
+    badges = {
+        'high':   '🟢 High confidence',
+        'medium': '🟡 Medium confidence',
+        'low':    '🔴 Low confidence — treat with caution',
+    }
+    return badges.get(level, '⚪ Unknown')
+
+# ── Page header ──────────────────────────────────────────
 st.title('📄 DocSense')
 st.caption('Intelligent document Q&A with source grounding')
 
 col_chat, col_citations = st.columns([2, 1])
 
-with col_chat:
-    st.subheader('Ask a question')
-    st.info('Upload a document in the sidebar to get started.')
-
-with col_citations:
-    st.subheader('Sources')
-    st.caption('Citations will appear here alongside each answer.')
-
-# ── Sidebar placeholder ──────────────────────────────────
-with st.sidebar:
-    st.header('Documents')
-    st.caption('Upload PDFs to query against.')
+# ── Sidebar ──────────────────────────────────────────────
 with st.sidebar:
     st.header('📁 Documents')
 
-    # ── Demo mode toggle ──────────────────────────────
+    # ── Demo mode ─────────────────────────────────────
     if st.button('▶  Load Demo Documents', use_container_width=True):
         demo_files = [f for f in os.listdir('demo_corpus') if f.endswith('.pdf')]
         for demo_file in demo_files:
@@ -73,7 +84,7 @@ with st.sidebar:
                 st.session_state.ingested_files.append(uploaded_file.name)
                 st.success(f'✅ {uploaded_file.name} — {n} chunks indexed')
 
-# ── Ingested files list ───────────────────────────
+    # ── Ingested files list ───────────────────────────
     if st.session_state.ingested_files:
         st.divider()
         st.caption('Indexed documents:')
@@ -92,33 +103,29 @@ with st.sidebar:
     # ── Clear conversation ────────────────────────────
     st.divider()
     if st.button('🗑  Clear conversation', use_container_width=True):
+        delete_session(st.session_state.session_id)
         st.session_state.messages = []
+        st.session_state.memory = create_memory()
+        st.session_state.session_id = str(uuid.uuid4())
         st.rerun()
 
-    
-# ── Helpers ──────────────────────────────────────────────
-def confidence_badge(level: str) -> str:
-    badges = {
-        'high':   '🟢 High confidence',
-        'medium': '🟡 Medium confidence',
-        'low':    '🔴 Low confidence — treat with caution',
-    }
-    return badges.get(level, '⚪ Unknown')
+# ── Chat column ──────────────────────────────────────────
 with col_chat:
     st.subheader('💬 Ask a question')
 
-    # ── Guard: require documents first ───────────────
     if not st.session_state.ingested_files:
         st.info('👈 Upload a document or load the demo to get started.')
     else:
-        # ── Display conversation history ──────────────
+        # ── Conversation history ──────────────────────
         for msg in st.session_state.messages:
             with st.chat_message(msg['role']):
                 st.markdown(msg['content'])
                 if msg['role'] == 'assistant' and 'confidence' in msg:
                     st.caption(confidence_badge(msg['confidence']))
-        
-        # Context length warning
+                    mode_label = '🔄 Re-ranked' if msg.get('rerank_enabled') else '🔍 Similarity only'
+                    st.caption(mode_label)
+
+        # ── Context length warning ────────────────────
         if len(st.session_state.messages) > 16:
             st.warning(
                 '⚠️ This conversation is getting long. Answer quality may reduce. '
@@ -128,21 +135,24 @@ with col_chat:
 
         # ── Chat input ────────────────────────────────
         if prompt := st.chat_input('Ask something about your documents...'):
-            # Show user message
             st.session_state.messages.append({'role': 'user', 'content': prompt})
             with st.chat_message('user'):
                 st.markdown(prompt)
 
-            # Get answer
             with st.chat_message('assistant'):
                 with st.spinner('Searching documents...'):
                     try:
-                        result = ask(prompt, rerank_enabled=rerank_enabled)
+                        result = ask(
+                            prompt,
+                            rerank_enabled=rerank_enabled,
+                            memory=st.session_state.memory
+                        )
                     except Exception as e:
                         result = {
-                            'answer': f'Something went wrong while generating the answer. Please try again.',
+                            'answer': 'Something went wrong while generating the answer. Please try again.',
                             'sources': [],
-                            'confidence': 'low'
+                            'confidence': 'low',
+                            'rerank_enabled': rerank_enabled
                         }
                         st.error(f'Error: {str(e)}')
                 st.markdown(result['answer'])
@@ -150,20 +160,20 @@ with col_chat:
                 mode_label = '🔄 Re-ranked' if result.get('rerank_enabled') else '🔍 Similarity only'
                 st.caption(mode_label)
 
-
-
-            # Store in history
             st.session_state.messages.append({
                 'role': 'assistant',
                 'content': result['answer'],
                 'confidence': result['confidence'],
-                'sources': result['sources']
+                'sources': result['sources'],
+                'rerank_enabled': result.get('rerank_enabled')
             })
+            save_session(st.session_state.session_id, st.session_state.messages)
             st.rerun()
+
+# ── Citations column ─────────────────────────────────────
 with col_citations:
     st.subheader('📎 Sources')
 
-    # Show sources from the most recent assistant message
     last_sources = []
     for msg in reversed(st.session_state.messages):
         if msg['role'] == 'assistant' and msg.get('sources'):
@@ -175,8 +185,11 @@ with col_citations:
     else:
         seen = set()
         for s in last_sources:
-            key = f"{s['source']} — Page {s['page']}"
+            source = s['source'].replace('\\', '/')
+            if 'Temp' in source or 'tmp' in source.lower():
+                continue
+            key = f"{source} — Page {s['page']}"
             if key not in seen:
                 seen.add(key)
                 with st.expander(f"📄 Page {s['page']}", expanded=True):
-                    st.caption(s['source'])
+                    st.caption(source)
