@@ -1,14 +1,41 @@
 import streamlit as st
-from pipeline import ask
-from ingestion import ingest
 import tempfile
 import os
 import uuid
-from generation.memory import create_memory
+import time
+
+_start = time.time()
+
 from db.sessions import init_db, save_session, load_session, delete_session
+print(f"init_db done: {time.time() - _start:.2f}s")
+
+
+# ── Cached imports — only load once per session ──────────
+@st.cache_resource(show_spinner=False)
+def load_pipeline():
+    from pipeline import ask, format_response
+    return ask, format_response
+
+@st.cache_resource(show_spinner=False)
+def load_ingest():
+    from ingestion import ingest
+    return ingest
+
+@st.cache_resource(show_spinner=False)
+def load_memory():
+    from generation.memory import create_memory
+    return create_memory
+
+with st.spinner('Starting DocSense...'):
+    ask, format_response = load_pipeline()
+    ingest = load_ingest()
+    create_memory = load_memory()
+
+print(f"imports done: {time.time() - _start:.2f}s")
 
 # Initialise the database on app startup
 init_db()
+print(f"init_db done: {time.time() - _start:.2f}s")
 
 # ── Page config ──────────────────────────────────────────
 st.set_page_config(
@@ -32,6 +59,8 @@ if 'session_id' not in st.session_state:
     if stored:
         st.session_state.messages = stored
 
+print(f"session state done: {time.time() - _start:.2f}s")
+
 # ── Helpers ──────────────────────────────────────────────
 def confidence_badge(level: str) -> str:
     badges = {
@@ -50,6 +79,8 @@ col_chat, col_citations = st.columns([2, 1])
 # ── Sidebar ──────────────────────────────────────────────
 with st.sidebar:
     st.header('📁 Documents')
+
+    print(f"sidebar done: {time.time() - _start:.2f}s")
 
     # ── Demo mode ─────────────────────────────────────
     if st.button('▶  Load Demo Documents', use_container_width=True):

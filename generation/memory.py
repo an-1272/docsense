@@ -13,8 +13,14 @@ class SimpleSummaryMemory:
     def __init__(self):
         self.recent_turns = []
         self.summary = ""
-        self.llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
+        self._llm = None  # deferred — not created until first use
 
+    @property
+    def llm(self):
+        if self._llm is None:
+            self._llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
+        return self._llm
+    
     def add_turn(self, query: str, answer: str):
         self.recent_turns.append({'user': query, 'assistant': answer})
         if len(self.recent_turns) > 4:
