@@ -58,7 +58,7 @@ with st.sidebar:
             path = os.path.join('demo_corpus', demo_file)
             if demo_file not in st.session_state.ingested_files:
                 with st.spinner(f'Loading {demo_file}...'):
-                    ingest(path)
+                    ingest(path, source_name=f"demo_corpus/{demo_file}")
                     st.session_state.ingested_files.append(demo_file)
         st.session_state.demo_mode = True
         st.success(f'Loaded {len(demo_files)} demo document(s)')
@@ -79,7 +79,7 @@ with st.sidebar:
                     tmp.write(uploaded_file.read())
                     tmp_path = tmp.name
                 with st.spinner(f'Processing {uploaded_file.name}...'):
-                    n = ingest(tmp_path)
+                    n = ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
                 os.unlink(tmp_path)
                 st.session_state.ingested_files.append(uploaded_file.name)
                 st.success(f'✅ {uploaded_file.name} — {n} chunks indexed')
