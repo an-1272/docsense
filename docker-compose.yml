@@ -1,0 +1,12 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  docsense:
+    build: .
+    ports:
+      - '8501:8501'
+    env_file:
+      - .env
+    volumes:
+      - ./demo_corpus:/app/demo_corpus
+      - ./db:/app/db
