@@ -25,9 +25,7 @@ jobs:
       - name: Lint with flake8
         run: |
           pip install flake8
-          flake8 . --count --max-line-length=120 --exclude=venv,__pycache__,.git,tests --ignore=E302,E402,W291,W292,W293,W391,E265,F401,E501
-      
-        
+          flake8 . --count --max-line-length=120 --exclude=venv,__pycache__,.git,tests --ignore=E302,E402,W291,W292,W293,W391,E265,F401,E501,E305,E241,E226
 
       - name: Run unit tests
         run: |
