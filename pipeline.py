@@ -1,6 +1,7 @@
 # pipeline.py
 import os
 from dotenv import load_dotenv
+from langsmith import traceable
 
 load_dotenv()
 
@@ -9,6 +10,7 @@ USE_PINECONE = os.getenv('USE_PINECONE', 'false').lower() == 'true'
 from generation.generator import generate_answer
 from generation.memory import get_history_string, add_turn, rewrite_query
 
+@traceable(name='docsense_pipeline')
 def ask(query: str, n_results: int = 5, rerank_enabled: bool = True, memory=None) -> dict:
     """
     Full RAG pipeline with optional re-ranking.

@@ -3,12 +3,14 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from generation.prompts import SYSTEM_PROMPT
 from generation.context import build_context
+from langsmith import traceable
 
 load_dotenv()
 client = OpenAI()
 
 CONFIDENCE_THRESHOLD = 0.45
 
+@traceable(name='generate_answer')
 def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
     """
     Generate a grounded, cited answer from retrieved chunks.
