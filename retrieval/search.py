@@ -7,17 +7,19 @@ from ingestion.embedder import get_collection
 load_dotenv()
 co = cohere.Client(os.getenv('COHERE_API_KEY'))
 
-def search(query: str, n_results: int = 20, collection_name: str = 'docsense') -> list[dict]:
+def search(query: str, n_results: int = 20, collection_name: str = 'docsense', source_filter: list[str] = None) -> list[dict]:
     """
     Stage 1: Bi-encoder similarity search.
     Retrieves top-n candidates by cosine distance.
     Default n increased to 20 to give re-ranker more candidates to work with.
+    If source_filter is given (a list of `source` values), restricts the search to those documents.
     """
     collection = get_collection(collection_name)
     results = collection.query(
         query_texts=[query],
         n_results=n_results,
-        include=['documents', 'metadatas', 'distances']
+        include=['documents', 'metadatas', 'distances'],
+        where={'source': {'$in': source_filter}} if source_filter else None
     )
     output = []
     for i in range(len(results['documents'][0])):

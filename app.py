@@ -49,6 +49,8 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 if 'ingested_files' not in st.session_state:
     st.session_state.ingested_files = []
+if 'doc_sources' not in st.session_state:
+    st.session_state.doc_sources = {}   # display name -> full `source` metadata value
 if 'demo_mode' not in st.session_state:
     st.session_state.demo_mode = False
 if 'memory' not in st.session_state:
@@ -91,6 +93,7 @@ with st.sidebar:
                 with st.spinner(f'Loading {demo_file}...'):
                     ingest(path, source_name=f"demo_corpus/{demo_file}")
                     st.session_state.ingested_files.append(demo_file)
+                    st.session_state.doc_sources[demo_file] = f"demo_corpus/{demo_file}"
         st.session_state.demo_mode = True
         st.success(f'Loaded {len(demo_files)} demo document(s)')
 
@@ -113,6 +116,7 @@ with st.sidebar:
                     n = ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
                 os.unlink(tmp_path)
                 st.session_state.ingested_files.append(uploaded_file.name)
+                st.session_state.doc_sources[uploaded_file.name] = f"uploads/{uploaded_file.name}"
                 st.success(f'✅ {uploaded_file.name} — {n} chunks indexed')
 
     # ── Ingested files list ───────────────────────────
@@ -121,6 +125,24 @@ with st.sidebar:
         st.caption('Indexed documents:')
         for fname in st.session_state.ingested_files:
             st.markdown(f'• {fname}')
+
+    # ── Document scope ────────────────────────────────
+    doc_scope = []
+    if st.session_state.ingested_files:
+        st.divider()
+        doc_scope = st.multiselect(
+            'Search scope',
+            options=st.session_state.ingested_files,
+            help='Restrict retrieval to one or more documents. Leave empty to search all indexed documents.'
+        )
+        scope_key = tuple(sorted(doc_scope))
+        if 'last_doc_scope' not in st.session_state:
+            st.session_state.last_doc_scope = scope_key
+        if scope_key != st.session_state.last_doc_scope:
+            # Switching scope is a topic change — stale conversation memory would
+            # otherwise get carried into query rewriting for the new document(s)/pool.
+            st.session_state.memory = create_memory()
+            st.session_state.last_doc_scope = scope_key
 
     # ── Retrieval settings ────────────────────────────
     st.divider()
@@ -173,10 +195,15 @@ with col_chat:
             with st.chat_message('assistant'):
                 with st.spinner('Searching documents...'):
                     try:
+                        source_filter = (
+                            [st.session_state.doc_sources[name] for name in doc_scope]
+                            if doc_scope else None
+                        )
                         result = ask(
                             prompt,
                             rerank_enabled=rerank_enabled,
-                            memory=st.session_state.memory
+                            memory=st.session_state.memory,
+                            source_filter=source_filter
                         )
                     except Exception as e:
                         result = {

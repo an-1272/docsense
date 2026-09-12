@@ -74,6 +74,13 @@ DocSense is a production-pattern RAG (Retrieval-Augmented Generation) applicatio
 - Final eval result: faithfulness 0.80, answer relevancy 0.73 — both targets met
 - Full details in Troubleshooting History → Session 4 below
 
+### Session 5 — Document Scoping UI (2026-09-12)
+- Built a "Search scope" multi-select in the Streamlit sidebar — restrict retrieval to one or more documents, or pool all
+- Added `source_filter` support to both retrieval backends (Pinecone and ChromaDB) and threaded it through pipeline.ask()
+- Found and fixed a real bug during live browser testing: switching document scope didn't reset conversation memory, so query rewriting could carry a stale topic into a newly-scoped, unrelated document
+- Verified end-to-end in the browser (not just unit tests) with 3 real documents, including a user-uploaded PDF
+- Full details in Troubleshooting History → Session 5 below
+
 ---
 
 ## Current Status
@@ -86,8 +93,10 @@ DocSense is a production-pattern RAG (Retrieval-Augmented Generation) applicatio
 - ✅ Project 1 Week 2 — GitHub Actions + LangSmith
 - ✅ Project 1 Week 2 — Eval harness run to completion: faithfulness 0.80, answer relevancy 0.73 (both targets met) — see Session 4
 - ✅ Document identity/title-chunk fix — resolves "what does the X doc say" style queries
-- 🔄 Document-scoping UI (single-doc picker vs. pool-all-docs toggle) — designed, not yet built
+- ✅ Document-scoping UI — multi-select "Search scope" picker in sidebar (0+ docs, empty = search all), verified live — see Session 5
+- ⏳ Query-time filename-detection (infer scope from question text automatically, no picker) — not started
 - ⏳ Project 2 — LangGraph + Azure (NOT STARTED)
+- ⚠️ UNCONFIRMED — REMINDER: user reported UI-uploaded files get stored/displayed under a different name than the original filename. Traced the code (app.py -> ingest(source_name=...)) on 2026-09-12 and could NOT reproduce — source_name correctly preserves uploaded_file.name end to end. Deferred at user's request ("keep #2b for later"). Next step: ask user exactly where they saw the wrong name (sidebar list / citation panel / chat text), ideally reproduce live in the running Streamlit app rather than by tracing code.
 
 ---
 
@@ -176,7 +185,7 @@ Real-world gap identified (not from the eval set — surfaced by reasoning about
 Fix: Added ingestion/title_chunk.py — synthesizes one extra chunk per document at ingest time (`Document filename: X | Title: ... | Summary: ...`, via a GPT-4o-mini call over the first ~3000 chars), inserted into ingestion/__init__.py's ingest() before embedding. This chunk gives identity/topic queries something concrete and high-signal to match against.
 Verified impact (isolated retrieval test, outside the full eval set): query "What does sample.pdf say?" — title chunk relevance jumped from ~0.005 (untraceable, not even in top-20) to **0.9957** (rank 1, decisively above threshold). "What is this document about?" — **0.575**. Both cleared the 0.1 threshold with zero change to chunk size, overlap, or the threshold itself.
 Limitation: the eval dataset's exact phrasing "What is the main topic of the paper?" still doesn't reliably match the title chunk (Cohere ranks it ~0.003, outside the fixed set of questions this was validated against) — a phrasing-sensitivity quirk of the cross-encoder, not a routing failure. The core scenario (asking about a document by name) is solved; that specific eval phrasing is not.
-Still open: query-time filename-detection (auto-filter to a named document) and a UI document-picker / pool-all-documents toggle — both designed, deferred to a follow-up session.
+Still open: query-time filename-detection (auto-filter to a named document, i.e. inferring scope from the question text itself rather than an explicit picker) — not built. The UI document-picker was built the same day, see Session 5 below.
 
 **Issue 4: LLM-as-judge was scoring faithfulness against fake context**
 eval/run_eval.py's run_evaluation() built the "Retrieved Context" shown to the GPT-4o-mini judge as `' | '.join(f"{s['source']} p.{s['page']}" ...)` — i.e. just filename+page labels like "sample.pdf p.1", never the actual chunk text. The judge was asked "is every claim supported by the retrieved context" while looking at a string with zero content to verify against. Result: faithfulness scores were noisy and sometimes flatly wrong — e.g. an answer correctly stating "Florida Gulf Coast University" (matching ground truth exactly) was scored 0.5 faithfulness one run and 1.0 the next; an answer correctly naming the journal "Applied Sciences" was scored 0.0 faithfulness. Answer-relevancy scores (question vs. answer only, no context needed) were unaffected and stayed reliable throughout — that asymmetry is what pointed at context, not the judge model itself, as the root cause.
@@ -190,6 +199,22 @@ After Issue 2/3 fixes, 3 of 15 eval questions still fail (main topic, storm date
 - The threshold is a single global constant gating every query, for every future document — a change made to pass 3 known questions on one demo paper would loosen the gate everywhere, for documents and questions never tested.
 - **Interview talking point:** this project's resume bullet already claims *"confidence-based fallback eliminating out-of-scope hallucinations."* That property is real and demonstrated — the system would rather say "I don't know" than guess from a weak match. Loosening the threshold specifically to make more eval questions pass would trade a demonstrated, deliberate safety property for a better score on a 15-question fixed set — a worse trade than it looks. The stronger interview answer is: "I traced exactly why these 3 fail, confirmed the content is being retrieved correctly, and chose not to lower the confidence gate to force them through — because conservative grounding (refusing when uncertain) is the safer default for a real document Q&A system, and a system that never says 'I don't know' is a worse system even if it scores higher on a fixed eval set." This is a stronger, more defensible story than silently tuning a number until tests pass.
 Final eval numbers with the threshold untouched: faithfulness 0.80, answer relevancy 0.73 — both targets (>0.80, >0.70) met despite the 3 known, understood, and intentionally-preserved limitation cases.
+
+### Session 5 — Document Scoping UI + Memory/Scope Interaction Bug (2026-09-12)
+**Feature: document scope picker (multi-select)**
+Built the UI half of the document-identity fix (Session 4, Issue 3) — a "Search scope" control in the sidebar letting the user restrict retrieval to one or more specific documents, or leave it empty to pool all indexed documents. Implementation:
+- `retrieval/pinecone_search.py` `search_pinecone()` and `retrieval/search.py` `search()` both take a new `source_filter: list[str] = None` param — Pinecone via `filter={'source': {'$in': source_filter}}`, ChromaDB via the equivalent `where={'source': {'$in': source_filter}}`. A list (not a single string) from the start, so single- and multi-document scoping share one code path.
+- `pipeline.ask()` threads `source_filter` through to whichever backend is active.
+- `app.py`: `st.session_state.doc_sources` (added) maps each display filename to its full `source` metadata value (`uploads/X` or `demo_corpus/X`), since the UI only ever shows the bare filename but retrieval needs the prefixed value. The sidebar uses `st.multiselect('Search scope', options=ingested_files)` — empty selection = search all documents.
+Verified live in the browser (not just unit-tested): loaded 2 demo docs (`sample.pdf`, `sample2.pdf`, an astrophysics paper on galaxy classification already sitting in `demo_corpus/` but never previously ingested) plus a real user-uploaded file (`biology-11-00233.pdf`, a honey-bee ecology paper). Confirmed: scoping to the wrong doc correctly refuses to answer a question whose content lives in a different doc; scoping to the right doc answers correctly with sources attributed only to it; pooling multiple docs together still finds the right one; the multiselect widget itself (chip-based, with a built-in "Select all") renders and behaves correctly for 2+ simultaneous selections.
+
+**Bug found during that live testing: document-scope changes didn't reset conversation memory**
+Not a flaw in the scoping filter itself (verified correct in isolation via direct Python calls) — an interaction gap between the new scope picker and the existing conversation-memory/query-rewriting feature (Add-On 2). `pipeline.ask()` runs every question through `rewrite_query()`, which uses prior turns to expand follow-ups (e.g. "where do they work?" → "where does Gilbert Green work?"). It has no awareness of the scope picker. Repro: asked 2 questions about galaxy classification scoped to `sample2.pdf`, then switched scope to `biology-11-00233.pdf` (unrelated bee-ecology paper) and asked a fresh, generic "What does this document say?" — got a fallback ("I could not find a reliable answer"), even though the biology paper's title chunk independently verified at **0.30 Cohere relevance** (well above the 0.1 threshold) for that exact question. Root cause confirmed directly: `rewrite_query()` turned the generic question into *"What does this document say about galaxy classification, considering that the previous response mentioned a new approach using a fuzzy set theory framework?"* — carrying the old document's topic into the new document's query, so retrieval never even searched for the right thing.
+Fix: `app.py` now tracks the last-seen scope selection (`st.session_state.last_doc_scope`, compared as a sorted tuple so option order doesn't matter) and calls `create_memory()` to reset conversation memory whenever the scope selection changes. Switching documents is treated as a topic change, same logic as clicking "Clear conversation" but automatic and narrower (only resets the memory/rewrite context, not the visible chat log, session id, or SQLite session).
+Verified: repeated the exact repro after the fix — same 2 prior galaxy-classification turns, same scope switch to the biology paper, same generic question — now correctly answers about "The Honey Bee Apis mellifera: An Insect at the Interface between Human and Ecosystem Health" with medium confidence and sources correctly attributed to `uploads/biology-11-00233.pdf`.
+**Lesson for future features:** any new control that changes retrieval scope/context (this scope picker, and anything similar added later) needs to be checked against every existing feature that assumes conversational continuity (memory, query rewriting) — this class of bug doesn't show up in unit tests or isolated retrieval checks, only in live multi-turn UI testing, which is why it wasn't caught until browser verification.
+
+**Corpus note:** `biology-11-00233.pdf` (user-provided, honey bee ecology) is now a real, permanently-uploaded document in the Pinecone index (`uploads/biology-11-00233.pdf`, 412 chunks) — not test data, don't delete it. `demo_corpus/sample2.pdf` (galaxy classification, fuzzy set theory) was already present in the repo's demo corpus folder but had never actually been ingested/tested before this session; it now has been, is part of the regular "Load Demo Documents" flow, and was useful specifically because it's topically unrelated to `sample.pdf`, making it a clean second document for cross-document filter testing.
 
 ---
 

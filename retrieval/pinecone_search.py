@@ -12,8 +12,9 @@ openai_client = OpenAI()
 co = cohere.Client(os.getenv('COHERE_API_KEY'))
 INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'docsense')
 
-def search_pinecone(query: str, n_results: int = 20) -> list[dict]:
-    """Stage 1: Embed query and search Pinecone for top-n candidates."""
+def search_pinecone(query: str, n_results: int = 20, source_filter: list[str] = None) -> list[dict]:
+    """Stage 1: Embed query and search Pinecone for top-n candidates.
+    If source_filter is given (a list of `source` values), restricts the search to those documents."""
     index = pc.Index(INDEX_NAME)
     response = openai_client.embeddings.create(
         input=[query],
@@ -23,7 +24,8 @@ def search_pinecone(query: str, n_results: int = 20) -> list[dict]:
     results = index.query(
         vector=query_vector,
         top_k=n_results,
-        include_metadata=True
+        include_metadata=True,
+        filter={'source': {'$in': source_filter}} if source_filter else None
     )
     return [
         {

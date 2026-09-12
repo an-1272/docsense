@@ -11,25 +11,26 @@ from generation.generator import generate_answer
 from generation.memory import get_history_string, add_turn, rewrite_query
 
 @traceable(name='docsense_pipeline')
-def ask(query: str, n_results: int = 5, rerank_enabled: bool = True, memory=None) -> dict:
+def ask(query: str, n_results: int = 5, rerank_enabled: bool = True, memory=None, source_filter: list[str] = None) -> dict:
     """
     Full RAG pipeline with optional re-ranking.
     Routes to Pinecone or ChromaDB based on USE_PINECONE env variable.
+    source_filter: if given (a list of `source` metadata values), restricts retrieval to those documents.
     """
     search_query = rewrite_query(query, memory) if memory else query
 
     if USE_PINECONE:
         from retrieval.pinecone_search import search_pinecone, rerank_pinecone
-        chunks = search_pinecone(search_query, n_results=20)
+        chunks = search_pinecone(search_query, n_results=20, source_filter=source_filter)
         if rerank_enabled:
             chunks = rerank_pinecone(search_query, chunks, top_n=n_results)
     else:
         from retrieval.search import search, rerank
         if rerank_enabled:
-            chunks = search(search_query, n_results=20)
+            chunks = search(search_query, n_results=20, source_filter=source_filter)
             chunks = rerank(search_query, chunks, top_n=n_results)
         else:
-            chunks = search(search_query, n_results=n_results)
+            chunks = search(search_query, n_results=n_results, source_filter=source_filter)
 
     history = get_history_string(memory) if memory else ''
     result = generate_answer(query, chunks, history=history)
