@@ -20,7 +20,8 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
         return {
             'answer': 'I could not find a reliable answer to that in the provided documents.',
             'sources': [],
-            'confidence': 'low'
+            'confidence': 'low',
+            'context': ''
         }
 
     if 'relevance_score' in chunks[0]:
@@ -32,7 +33,8 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
         return {
             'answer': 'I could not find a reliable answer to that in the provided documents.',
             'sources': [],
-            'confidence': 'low'
+            'confidence': 'low',
+            'context': ''
         }
 
     context = build_context(chunks)
@@ -66,5 +68,6 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
     return {
         'answer': response.choices[0].message.content,
         'sources': sources,
-        'confidence': confidence
+        'confidence': confidence,
+        'context': context
     }

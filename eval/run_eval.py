@@ -17,7 +17,7 @@ def score_answer(question: str, answer: str, ground_truth: str, context: str) ->
     prompt = f"""You are evaluating a RAG system. Score the following answer on two metrics.
 
 Question: {question}
-Retrieved Context: {context[:500]}
+Retrieved Context: {context[:3000]}
 Generated Answer: {answer}
 Expected Answer: {ground_truth}
 
@@ -54,10 +54,7 @@ def run_evaluation():
         print(f"[{i}/{len(EVAL_QUESTIONS)}] {item['question'][:60]}...")
         result = ask(item['question'], rerank_enabled=True)
 
-        context = ' | '.join([
-            f"{s['source']} p.{s['page']}"
-            for s in result.get('sources', [])
-        ])
+        context = result.get('context', '')
 
         scores = score_answer(
             item['question'],
