@@ -84,7 +84,7 @@ def run_evaluation():
     avg_faithfulness = total_faithfulness / n
     avg_relevancy = total_relevancy / n
 
-    print(f"\n=== DocSense Evaluation Results ===")
+    print("\n=== DocSense Evaluation Results ===")
     print(f"Faithfulness:     {avg_faithfulness:.2f} (target > 0.80)")
     print(f"Answer Relevancy: {avg_relevancy:.2f} (target > 0.70)")
 
