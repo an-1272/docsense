@@ -1,12 +1,12 @@
 # generation/generator.py — updated generate_answer() signature and prompt
-from openai import OpenAI
 from dotenv import load_dotenv
 from generation.prompts import SYSTEM_PROMPT
 from generation.context import build_context
 from langsmith import traceable
+from azure_client import get_openai_client, CHAT_MODEL
 
 load_dotenv()
-client = OpenAI()
+client = get_openai_client()
 
 CONFIDENCE_THRESHOLD = 0.45
 
@@ -50,7 +50,7 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
         user_message = f'Context passages:\n{context}\n\nQuestion: {query}'
 
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model=CHAT_MODEL,
         max_tokens=1024,
         messages=[
             {'role': 'system', 'content': SYSTEM_PROMPT},

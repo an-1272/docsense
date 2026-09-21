@@ -96,9 +96,10 @@ DocSense is a production-pattern RAG (Retrieval-Augmented Generation) applicatio
 - ✅ Document-scoping UI — multi-select "Search scope" picker in sidebar (0+ docs, empty = search all), verified live — see Session 5
 - ⏳ Query-time filename-detection (infer scope from question text automatically, no picker) — not started
 - ✅ Filename display — user re-checked on 2026-09-13 and confirmed filenames populate correctly everywhere. The 2026-09-12 report is not a real bug — closed, no code change needed.
-- ✅ Project 2 Phase 1 — LangGraph Reflection state machine (retrieve → critique → revise → respond) replaces the linear pipeline. Eval re-verified at faithfulness 0.79 / relevancy 0.80 (matches/exceeds the original benchmark once measured fairly) — see Session 6 (2026-09-13)
-- 🛑 Project 2 Phase 2 (Azure OpenAI) — BLOCKED, paused 2026-09-13 at user's request ("pick this back up tomorrow"). No Azure account/subscription set up yet, no `AZURE_*` vars in `.env`, Azure CLI not installed on this machine. Needs: an Azure OpenAI resource provisioned in the portal + `gpt-4o-mini` and `text-embedding-3-small` deployed under it, before any code changes for Phase 2 can start. See `PROJECT_2_BUILD_PLAN.pdf` Component 2 for exact steps.
-- ⏳ Project 2 Phase 2–5 — Azure OpenAI, Azure AI Search, Azure Container Apps, ADR (NOT STARTED)
+- ✅ Project 2 Phase 1 — LangGraph Reflection state machine (retrieve → critique → revise → respond) replaces the linear pipeline. Eval re-verified at faithfulness 0.79 / relevancy 0.80 (matches/exceeds the original benchmark once measured fairly) — see Session 6 (2026-09-13). **Was sitting uncommitted for over a week — committed 2026-09-21** (`d6d6a2f`), re-confirmed with a fresh eval run same day (0.80/0.73, eval/results_20260921_175716.json).
+- ✅ Project 2 Phase 2–3 code — Azure OpenAI + Azure AI Search client paths written and code-verified (imports, signatures, client construction all checked with dummy credentials; existing OpenAI/Pinecone path re-confirmed unaffected via pytest + a live pipeline call). **Not live-tested against real Azure** — no resources provisioned yet. See Session 7 (2026-09-21) below.
+- 🛑 Project 2 Phase 2–3 (Azure OpenAI + Azure AI Search) — BLOCKED on actual provisioning. Still no Azure subscription / OpenAI access as of 2026-09-21 (confirmed with user). Needs, before `USE_AZURE=true` / `USE_AZURE_SEARCH=true` can be flipped on: an Azure OpenAI resource with `gpt-4o-mini` + `text-embedding-3-small` deployed, and an Azure AI Search service with a `docsense` index (fields: `id`, `text`, `source`, `page`, `content_vector` 1536-dim). See `PROJECT_2_BUILD_PLAN.pdf` Components 2–3 for exact portal steps.
+- ⏳ Project 2 Phase 4–5 — Azure Container Apps deploy, ADR (NOT STARTED, blocked on Phase 2–3)
 
 ---
 
@@ -235,6 +236,19 @@ Verified: repeated the exact repro after the fix — same 2 prior galaxy-classif
 - **Final verified eval score (LangGraph pipeline, scoped to sample.pdf): faithfulness 0.79, answer relevancy 0.80** — matches the original faithfulness benchmark (difference is rounding-level on 15 questions) and *exceeds* the original relevancy benchmark (0.73 → 0.80). The same 3 pre-existing, deliberately-accepted threshold-gated failures from Session 4 remain (main topic, storm date, instruments used) — nothing new; every other question passed cleanly, including the 3 that had looked like new regressions (institution, study location, journal) before the corpus-scoping fix.
 - **Lesson:** an eval harness's benchmark is only valid for the corpus it was measured against — a shared index that grows over time (new documents added in later sessions, never scoped out) silently invalidates old scores without the harness itself ever changing. Worth checking corpus composition, not just code changes, whenever an eval score moves unexpectedly.
 
+### Session 7 — Committed Phase 1, wrote Azure OpenAI + Azure AI Search code paths (2026-09-21)
+**Found Session 6's LangGraph work had never been committed** (`generation/graph.py`, `generation/critique.py` were untracked; `pipeline.py`/`requirements.txt`/eval changes were unstaged) — over a week of real work sitting only on disk. Re-ran the eval fresh to reconfirm (0.80/0.73, same 3 known fallback questions), then committed it all as `d6d6a2f`.
+
+**Azure OpenAI + Azure AI Search (Phase 2–3) — code written, not live-tested (no Azure resources exist yet):**
+- New `azure_client.py` (project root): single factory for every OpenAI touchpoint in the codebase — `get_openai_client()` (returns `AzureOpenAI` when `USE_AZURE=true`, else plain `OpenAI()`), `get_chat_llm()` (same idea for the two LangChain `ChatOpenAI` sites in `memory.py`, via `AzureChatOpenAI`), plus `CHAT_MODEL`/`EMBEDDING_MODEL` constants. Written as one shared module instead of duplicating the if/else from the build plan's example across all 8 call sites (`generator.py`, `critique.py`, `memory.py`, `title_chunk.py`, `pinecone_embedder.py`, `pinecone_search.py`, `eval/run_eval.py`) — one place to get it right, one place a future model/API-version bump touches.
+- Every one of those 8 call sites now imports from `azure_client.py` instead of constructing `OpenAI()`/`ChatOpenAI()` directly, and passes `CHAT_MODEL`/`EMBEDDING_MODEL` instead of a hardcoded `'gpt-4o-mini'`/`'text-embedding-3-small'` string.
+- New `ingestion/azure_search_embedder.py` + `retrieval/azure_search.py` — Azure AI Search hybrid (vector + keyword) equivalents of `pinecone_embedder.py`/`pinecone_search.py`, same chunk/return shape, same `source_filter` scoping mechanism. One correction versus the build plan's example: `search.in(source, ..., ',')` would break if a filename ever contained a comma — used `'|'` as the delimiter instead.
+- `generation/graph.py`'s `retrieve_node` gets a third branch: `USE_AZURE_SEARCH` checked before `USE_PINECONE`, same pattern as the existing two-way check.
+- Installed `azure-search-documents` + `azure-identity` into `venv` and added them (plus transitive deps `msal`, `msal-extensions`, `PyJWT`, `isodate`) to `requirements.txt` by hand — a straight `pip freeze` at this point would have also captured ~24 unrelated stray packages (`ragas`, `flake8`, `scipy`, `instructor`, etc.) already sitting in the venv from earlier, never-committed experiments. Left those alone; not this session's scope.
+- **Verification without real Azure creds:** `pytest tests/` (5/5 pass) + a live `ask()` call against the real OpenAI/Pinecone path (both untouched by default, `USE_AZURE`/`USE_AZURE_SEARCH` unset) confirm nothing broke. Separately, constructed `AzureOpenAI`, `AzureChatOpenAI`, and both new Azure Search modules with dummy env vars to confirm they import and build correctly — this checks the code is *structurally* right, not that it actually works against real Azure, which needs real resources.
+- `.env` got a commented-out `AZURE_*`/`USE_AZURE*` block appended (inactive) documenting exactly what to fill in once resources exist.
+- **User confirmed 2026-09-21: still no Azure subscription/OpenAI access.** Next real step is on the user's side — provision in the Azure Portal per `PROJECT_2_BUILD_PLAN.pdf` Components 2–3, then flip `USE_AZURE=true` / `USE_AZURE_SEARCH=true` in `.env` and re-run the eval harness as the actual first live test.
+
 ---
 
 ## Project Structure
@@ -247,10 +261,12 @@ docsense/
     title_chunk.py           # Synthesizes 1 title/summary chunk per doc (GPT-4o-mini) — fixes doc-identity queries
     embedder.py              # ChromaDB (local dev)
     pinecone_embedder.py     # Pinecone (production)
+    azure_search_embedder.py # Azure AI Search (Project 2 — code written, not live-tested)
   retrieval/
     __init__.py
     search.py                # ChromaDB + Cohere rerank
     pinecone_search.py       # Pinecone + Cohere rerank
+    azure_search.py          # Azure AI Search hybrid + Cohere rerank (Project 2 — code written, not live-tested)
   generation/
     __init__.py
     prompts.py               # System prompt — DO NOT MODIFY without discussion
@@ -273,6 +289,7 @@ docsense/
       ci.yml                 # GitHub Actions — lint + pytest
   app.py                     # Streamlit frontend
   pipeline.py                # ask() invokes generation/graph.py's compiled LangGraph + format_response() + @traceable
+  azure_client.py            # OpenAI/Azure OpenAI client + model-name factory, used by every LLM/embedding call site
   Dockerfile
   docker-compose.yml
   requirements.txt

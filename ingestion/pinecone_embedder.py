@@ -1,13 +1,13 @@
 # ingestion/pinecone_embedder.py
 from pinecone import Pinecone, ServerlessSpec
-from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from azure_client import get_openai_client, EMBEDDING_MODEL
 
 load_dotenv()
 
 pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
-openai_client = OpenAI()
+openai_client = get_openai_client()
 INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'docsense')
 
 def get_index():
@@ -22,7 +22,7 @@ def embed_chunks_pinecone(chunks: list[dict]):
         texts = [c['text'] for c in batch]
         response = openai_client.embeddings.create(
             input=texts,
-            model='text-embedding-3-small'
+            model=EMBEDDING_MODEL
         )
         vectors = []
         for j, c in enumerate(batch):

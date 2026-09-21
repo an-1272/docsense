@@ -1,9 +1,9 @@
 # generation/critique.py
-from openai import OpenAI
 from dotenv import load_dotenv
+from azure_client import get_openai_client, CHAT_MODEL
 
 load_dotenv()
-client = OpenAI()
+client = get_openai_client()
 
 
 def judge_sufficiency(query: str, chunks: list[dict]) -> tuple[bool, str]:
@@ -16,7 +16,7 @@ def judge_sufficiency(query: str, chunks: list[dict]) -> tuple[bool, str]:
 
     context = '\n\n'.join(f'[{i+1}] {c["text"]}' for i, c in enumerate(chunks))
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model=CHAT_MODEL,
         max_tokens=150,
         messages=[
             {
@@ -44,7 +44,7 @@ def reformulate_query(query: str, critique: str) -> str:
     retrieval was judged insufficient.
     """
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model=CHAT_MODEL,
         max_tokens=60,
         messages=[
             {

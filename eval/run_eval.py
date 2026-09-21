@@ -1,15 +1,15 @@
 # eval/run_eval.py
 # Lightweight RAG evaluation using LLM-as-judge — no RAGAS dependency needed
-from openai import OpenAI
 from pipeline import ask
 from eval.eval_dataset import EVAL_QUESTIONS, FALLBACK
 import json
 import time
 from datetime import datetime
 from dotenv import load_dotenv
+from azure_client import get_openai_client, CHAT_MODEL
 
 load_dotenv()
-client = OpenAI()
+client = get_openai_client()
 
 
 def score_answer(question: str, answer: str, ground_truth: str, context: str) -> dict:
@@ -30,7 +30,7 @@ Respond in JSON only:
 {{"faithfulness": 0.0, "answer_relevancy": 0.0}}"""
 
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model=CHAT_MODEL,
         max_tokens=100,
         messages=[{'role': 'user', 'content': prompt}]
     )

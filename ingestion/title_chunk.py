@@ -1,9 +1,9 @@
 # ingestion/title_chunk.py
-from openai import OpenAI
 from dotenv import load_dotenv
+from azure_client import get_openai_client, CHAT_MODEL
 
 load_dotenv()
-client = OpenAI()
+client = get_openai_client()
 
 
 def generate_title_chunk(pages: list[dict], source: str) -> dict:
@@ -16,7 +16,7 @@ def generate_title_chunk(pages: list[dict], source: str) -> dict:
     lead_text = pages[0]['text'][:3000] if pages else ''
 
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model=CHAT_MODEL,
         max_tokens=150,
         messages=[
             {

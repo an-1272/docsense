@@ -1,14 +1,14 @@
 # retrieval/pinecone_search.py
 from pinecone import Pinecone
-from openai import OpenAI
 import cohere
 import os
 from dotenv import load_dotenv
+from azure_client import get_openai_client, EMBEDDING_MODEL
 
 load_dotenv()
 
 pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
-openai_client = OpenAI()
+openai_client = get_openai_client()
 co = cohere.Client(os.getenv('COHERE_API_KEY'))
 INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'docsense')
 
@@ -18,7 +18,7 @@ def search_pinecone(query: str, n_results: int = 20, source_filter: list[str] = 
     index = pc.Index(INDEX_NAME)
     response = openai_client.embeddings.create(
         input=[query],
-        model='text-embedding-3-small'
+        model=EMBEDDING_MODEL
     )
     query_vector = response.data[0].embedding
     results = index.query(

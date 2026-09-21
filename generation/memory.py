@@ -1,5 +1,5 @@
-from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+from azure_client import get_chat_llm
 
 load_dotenv()
 
@@ -18,7 +18,7 @@ class SimpleSummaryMemory:
     @property
     def llm(self):
         if self._llm is None:
-            self._llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
+            self._llm = get_chat_llm()
         return self._llm
     
     def add_turn(self, query: str, answer: str):
@@ -66,7 +66,7 @@ def rewrite_query(query: str, memory, llm=None) -> str:
     if not history:
         return query
 
-    rewriter = llm or ChatOpenAI(model='gpt-4o-mini', temperature=0)
+    rewriter = llm or get_chat_llm()
     prompt = (
         f"Given this conversation history:\n{history}\n\n"
         f"Rewrite this follow-up question as a complete, self-contained "

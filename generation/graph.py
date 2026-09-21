@@ -8,6 +8,7 @@ from langgraph.graph import StateGraph, END
 load_dotenv()
 
 USE_PINECONE = os.getenv('USE_PINECONE', 'false').lower() == 'true'
+USE_AZURE_SEARCH = os.getenv('USE_AZURE_SEARCH', 'false').lower() == 'true'
 
 MAX_RETRIES = 2
 
@@ -32,7 +33,12 @@ def retrieve_node(state: GraphState) -> GraphState:
     rerank_enabled = state['rerank_enabled']
     n_results = state['n_results']
 
-    if USE_PINECONE:
+    if USE_AZURE_SEARCH:
+        from retrieval.azure_search import search_azure, rerank_azure
+        chunks = search_azure(search_query, n_results=20, source_filter=source_filter)
+        if rerank_enabled:
+            chunks = rerank_azure(search_query, chunks, top_n=n_results)
+    elif USE_PINECONE:
         from retrieval.pinecone_search import search_pinecone, rerank_pinecone
         chunks = search_pinecone(search_query, n_results=20, source_filter=source_filter)
         if rerank_enabled:
