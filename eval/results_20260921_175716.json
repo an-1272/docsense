@@ -1,0 +1,130 @@
+{
+  "timestamp": "20260921_175716",
+  "summary": {
+    "faithfulness": 0.8,
+    "answer_relevancy": 0.733,
+    "total_questions": 15
+  },
+  "details": [
+    {
+      "question": "Who are the authors of the green flashes paper?",
+      "answer": "The authors of the paper titled \"Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm\" are Gilbert Green and Naomi Watanabe [Source: sample.pdf | Page 1].",
+      "ground_truth": "The authors are Gilbert Green and Naomi Watanabe.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What institution are the authors affiliated with?",
+      "answer": "The authors are affiliated with Florida Gulf Coast University (FGCU) and the Space Telescope Science Institute. Gilbert Green is associated with both FGCU and the Space Telescope Science Institute, while Naomi Watanabe is primarily associated with FGCU [Source: sample.pdf, Page 1].",
+      "ground_truth": "The authors are affiliated with Florida Gulf Coast University and the Space Telescope Science Institute.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the main topic of the paper?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "The paper studies green flashes observed in optical and infrared during an extreme electric storm.",
+      "confidence": "low",
+      "faithfulness": 0.0,
+      "answer_relevancy": 0.0
+    },
+    {
+      "question": "What causes the green and blue colors in lightning flashes?",
+      "answer": "The green and blue colors in lightning flashes are primarily caused by the interactions of the discharge with different atoms and molecules. When the discharge collides with nitrogen (N2 or N2+), it can emit pinkish or violet light. However, when the discharge interacts with oxygen atoms, it can emit blue to emerald-green light. This interaction depends on the energy of the electrons involved in the collisions; lower energy collisions result in the emerald-green or bluish luminosity, while higher energy collisions can produce pinkish or violet hues. \n\nAdditionally, the nature of the discharge itself, such as changes in polarity or direction, can also influence the colors emitted during a lightning event [Source: sample.pdf, Pages 10, 14].",
+      "ground_truth": "The colors are caused by interactions of the discharge with oxygen atoms, which emit blue to emerald-green light.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What date was the storm observed?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "The storm was observed on 17 April 2023.",
+      "confidence": "low",
+      "faithfulness": 0.0,
+      "answer_relevancy": 0.0
+    },
+    {
+      "question": "What is the role of atmospheric concentration in the observed coloration?",
+      "answer": "Atmospheric concentration plays a significant role in the visual coloration observed in thunderstorms. The study indicates that varying molecular concentrations in the atmosphere directly contribute to the unique spectral lines of the colored luminosity seen during these events. Specifically, the research explores the correlation between the colored flashes and these atmospheric concentrations, suggesting that they are the most significant factors influencing the coloration observed [Source: sample.pdf, Page 1]. \n\nTo further investigate this, methods such as detailed meteorological analysis, spectrum observations, and the use of an interferometer are employed. These approaches help to establish that atmospheric concentration is indeed the primary contributor to the visual effects witnessed [Source: sample.pdf, Page 15].",
+      "ground_truth": "Atmospheric concentration is the most significant contributor to the visual coloration observed in the green flashes.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What instruments were used in the study?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "The study used optical and infrared observation equipment including GLM data for lightning location mapping.",
+      "confidence": "low",
+      "faithfulness": 0.0,
+      "answer_relevancy": 0.0
+    },
+    {
+      "question": "What is GLM data?",
+      "answer": "The GLM data refers to information collected by the Geostationary Lightning Mapper, which is a satellite-based lightning detection system. It detects changes in cloud-top illumination and optical energy, specifically in the wavelength range around 777.4 nm, and captures data at a rate of 500 frames per second, equating to a 2 ms interval per frame. This system is utilized to analyze and identify locations of lightning discharges, and it can detect optical emissions from both cloud lightning and cloud-to-ground lightning flashes, even with very low energy down to 1 femtojoule (1 fJ = 1 \u00d7 10\u221215 J) [Source: sample.pdf, Pages 3-4]. Additionally, the data includes information on flash luminosity, providing insights into the intensity of the lightning events [Source: sample.pdf, Page 3].",
+      "ground_truth": "GLM refers to Geostationary Lightning Mapper data used to track lightning flash locations.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What causes pinkish and violet colors in lightning?",
+      "answer": "The pinkish and violet colors in lightning are primarily caused by collisions of electrons with nitrogen molecules (N\u2082) and nitrogen ions (N\u2082\u207a). During these collisions, energy is absorbed by the nitrogen molecules, which then leads to the emission of light at those wavelengths, typically appearing as pinkish or light violet [Source: sample.pdf, Page 13]. \n\nInitially, as the discharge occurs, electrons collide with N\u2082 and N\u2082\u207a, producing these pinkish or violet emissions. Later, as the discharge path becomes more established, the electrons start to collide with oxygen atoms (O), resulting in the emission of different colors, such as blue to emerald-green [Source: sample.pdf, Page 14].",
+      "ground_truth": "Pinkish and violet colors are caused by collisions with nitrogen molecules and ions.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "Where was the study conducted?",
+      "answer": "The study was conducted in Bonita Springs, Southwest Florida [Source: sample.pdf | Page 3].",
+      "ground_truth": "The study was conducted in Florida, with coordinates around 25.95N to 26.35N and 81.5W to 82.0W.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What journal was this paper published in?",
+      "answer": "The paper was published in \"Applied Sciences\" [Source: sample.pdf | Page 1].",
+      "ground_truth": "The paper was published in Applied Sciences (Appl. Sci.) in 2024.",
+      "confidence": "medium",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the significance of oceanic flashes in the study?",
+      "answer": "Oceanic flashes are significant in the study for several reasons. They are characterized by being larger, brighter, and more energetic compared to lightning flashes that occur over land. This increased optical power and energy likely allows these flashes to propagate horizontally over greater distances in the ocean environment. The study also notes that these flashes can cause bright emissions, which are significant in measurements as they provide insights into the behavior and characteristics of lightning in oceanic regions versus land [Source: sample.pdf, Page 2].\n\nFurthermore, the distinct properties of oceanic flashes suggest that their nature might differ physically from land-based flashes. Their ability to transmit light events over considerable distances and their interactions with the atmosphere, such as potentially emitting specific wavelengths of light, underscore their relevance in understanding lightning and its meteorological implications [Source: sample.pdf, Page 13]. Overall, oceanic flashes may enhance our understanding of storm dynamics and their connection to atmospheric phenomena.",
+      "ground_truth": "Oceanic flashes have higher optical power and energy, and may transmit green-blue light through clean air above the ocean.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the capital of France?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "I could not find a reliable answer to that in the provided documents.",
+      "confidence": "low",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "Who won the FIFA World Cup in 2022?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "I could not find a reliable answer to that in the provided documents.",
+      "confidence": "low",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the boiling point of water?",
+      "answer": "The document doesn't seem to cover that. If you have any other questions related to the content of the passages you provided, feel free to ask!",
+      "ground_truth": "I could not find a reliable answer to that in the provided documents.",
+      "confidence": "medium",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.0
+    }
+  ]
+}

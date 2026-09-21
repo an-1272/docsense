@@ -95,8 +95,10 @@ DocSense is a production-pattern RAG (Retrieval-Augmented Generation) applicatio
 - ✅ Document identity/title-chunk fix — resolves "what does the X doc say" style queries
 - ✅ Document-scoping UI — multi-select "Search scope" picker in sidebar (0+ docs, empty = search all), verified live — see Session 5
 - ⏳ Query-time filename-detection (infer scope from question text automatically, no picker) — not started
-- ⏳ Project 2 — LangGraph + Azure (NOT STARTED)
-- ⚠️ UNCONFIRMED — REMINDER: user reported UI-uploaded files get stored/displayed under a different name than the original filename. Traced the code (app.py -> ingest(source_name=...)) on 2026-09-12 and could NOT reproduce — source_name correctly preserves uploaded_file.name end to end. Deferred at user's request ("keep #2b for later"). Next step: ask user exactly where they saw the wrong name (sidebar list / citation panel / chat text), ideally reproduce live in the running Streamlit app rather than by tracing code.
+- ✅ Filename display — user re-checked on 2026-09-13 and confirmed filenames populate correctly everywhere. The 2026-09-12 report is not a real bug — closed, no code change needed.
+- ✅ Project 2 Phase 1 — LangGraph Reflection state machine (retrieve → critique → revise → respond) replaces the linear pipeline. Eval re-verified at faithfulness 0.79 / relevancy 0.80 (matches/exceeds the original benchmark once measured fairly) — see Session 6 (2026-09-13)
+- 🛑 Project 2 Phase 2 (Azure OpenAI) — BLOCKED, paused 2026-09-13 at user's request ("pick this back up tomorrow"). No Azure account/subscription set up yet, no `AZURE_*` vars in `.env`, Azure CLI not installed on this machine. Needs: an Azure OpenAI resource provisioned in the portal + `gpt-4o-mini` and `text-embedding-3-small` deployed under it, before any code changes for Phase 2 can start. See `PROJECT_2_BUILD_PLAN.pdf` Component 2 for exact steps.
+- ⏳ Project 2 Phase 2–5 — Azure OpenAI, Azure AI Search, Azure Container Apps, ADR (NOT STARTED)
 
 ---
 
@@ -216,6 +218,23 @@ Verified: repeated the exact repro after the fix — same 2 prior galaxy-classif
 
 **Corpus note:** `biology-11-00233.pdf` (user-provided, honey bee ecology) is now a real, permanently-uploaded document in the Pinecone index (`uploads/biology-11-00233.pdf`, 412 chunks) — not test data, don't delete it. `demo_corpus/sample2.pdf` (galaxy classification, fuzzy set theory) was already present in the repo's demo corpus folder but had never actually been ingested/tested before this session; it now has been, is part of the regular "Load Demo Documents" flow, and was useful specifically because it's topically unrelated to `sample.pdf`, making it a clean second document for cross-document filter testing.
 
+### Session 6 — Project 2 Phase 1: LangGraph Reflection Rewrite + Docker/Formatting cleanup (2026-09-13)
+**Docker + formatting cleanup (before Project 2 work started):**
+- `app.py`: added a Poppins font override (Google Fonts `@import` + forced `font-family` on key elements) and explicit font sizes (body 13px, captions 10px) via `st.markdown(..., unsafe_allow_html=True)`. First attempt used `!important` on a selector that included bare `span`/`div`, which unintentionally overrode Streamlit's own Material Symbols icon font — icons rendered as literal text (`keyboard_double_arrow_left`) until the selector was narrowed to just the elements that actually needed it (headings, buttons, inputs, chat text), leaving icons alone. Similarly, the first font-size rule included `html` in the selector, which shrank headings too (Streamlit sizes headings in `rem`, relative to the root) — fixed by removing `html` from the size rule so only `body`-relative text shrank, headings staying at their original 44px/28px.
+- **Docker image was 4 weeks stale** — every `docker compose up -d --build` had been silently getting stuck on a wedged BuildKit builder session (0 bytes progress, survived even killing the client) since an earlier Docker Desktop crash mid-session. The running container's `pipeline.py` predated the entire Session 5 document-scoping feature (no `source_filter` param), causing every question to throw `TypeError` — the actual cause of a "no answer generating" report. Worked around by `docker cp`-ing current source files directly into the running container + restarting (no rebuild needed for pure code changes).
+- Found `requirements.txt` was UTF-16-encoded (a `pip freeze > requirements.txt` in PowerShell artifact) — likely why `pinecone` silently failed to install correctly in the stale image. Converted to UTF-8. Once fixed, a full `docker compose build` succeeded cleanly from scratch (previous "stuck" builds may have actually been this cache/encoding issue compounding, not purely a wedged builder). Image is now current; container runs from the real build, no more manual patching needed.
+
+**Project 2 Phase 1 — LangGraph Reflection state machine:**
+- New `generation/graph.py`: a LangGraph `StateGraph` implementing `retrieve → critique → revise → respond`. `critique_node` (via new `generation/critique.py`'s `judge_sufficiency()`) asks an LLM whether retrieved chunks actually answer the query; if not, `revise_node` (via `reformulate_query()`) rewrites the search query and loops back to `retrieve`, capped at `MAX_RETRIES = 2` via `should_revise()`'s conditional edge.
+- `pipeline.py`'s `ask()` now invokes `compiled_graph.invoke(...)` instead of calling search/rerank/generate directly — external signature unchanged (`query, n_results, rerank_enabled, memory, source_filter`), so `app.py` and `eval/run_eval.py` needed no changes. Dead `USE_PINECONE` module-level var removed from `pipeline.py` (moved into `graph.py`, which now owns backend routing inside `retrieve_node`).
+- **Bug found via direct graph trace (`compiled_graph.stream(...)`)**: on the question "What institution are the authors affiliated with?", the first retrieval scored 0.87 relevance (well above the 0.5 HIGH-confidence bar) and its own critique reasoning *named FGCU* — yet critique still judged it "insufficient". That triggered a revise → the reformulated query ("List of authors and their affiliated institutions in the document") retrieved a *worse* result (0.106 relevance, wrong document) — which critique then approved as "sufficient". Net effect: reflection took a correct answer and corrupted it.
+  Fix: added `is_high_confidence()` / `should_critique()` — a retrieval that already clears the same HIGH-confidence bar `generate_answer()` uses skips critique entirely and goes straight to `respond`. Critique now only fires on genuinely borderline retrievals. Re-traced the same question post-fix: `retrieve` → (high-confidence, skip) → `respond`, confirmed structurally correct.
+- `revise_node` sleeps 2s before looping back — a retry re-runs `retrieve` (and its Cohere rerank call) back-to-back with the attempt that just ran; without pacing, a multi-retry query could burst past Cohere's free-tier 10-calls/minute limit within a single question, not just across the eval loop's existing between-question `time.sleep(7)`.
+- **Eval harness regression, root-caused (not a graph bug):** first re-run after the graph rewrite scored faithfulness 0.59 / relevancy 0.60 — well under the documented 0.80/0.73 benchmark. Investigated by running the *pre-graph baseline* `pipeline.py` (recovered via `git show HEAD:pipeline.py`) through the identical eval harness, unscoped, on today's corpus: it scored 0.63/0.65 — also far under 0.80/0.73, with zero code changes. Root cause: all 15 eval questions were written against `demo_corpus/sample.pdf` alone, back when it was the only document in the index. Since Session 5, `sample2.pdf` and `biology-11-00233.pdf` were permanently added to the same shared Pinecone index and never removed — the eval harness runs unscoped (`source_filter=None`), so it's been silently testing retrieval across 3 unrelated documents instead of the 1 it was designed for. Most of the apparent regression was this corpus drift, not the LangGraph rewrite; the graph's small remaining gap versus the true (unscoped, same-corpus) baseline was consistent with ordinary retrieval variance, not the critique bug (already independently confirmed fixed via trace).
+  Fix: `eval/run_eval.py`'s `ask()` call now passes `source_filter=['demo_corpus/sample.pdf']`, restoring the original single-document conditions the benchmark was designed for.
+- **Final verified eval score (LangGraph pipeline, scoped to sample.pdf): faithfulness 0.79, answer relevancy 0.80** — matches the original faithfulness benchmark (difference is rounding-level on 15 questions) and *exceeds* the original relevancy benchmark (0.73 → 0.80). The same 3 pre-existing, deliberately-accepted threshold-gated failures from Session 4 remain (main topic, storm date, instruments used) — nothing new; every other question passed cleanly, including the 3 that had looked like new regressions (institution, study location, journal) before the corpus-scoping fix.
+- **Lesson:** an eval harness's benchmark is only valid for the corpus it was measured against — a shared index that grows over time (new documents added in later sessions, never scoped out) silently invalidates old scores without the harness itself ever changing. Worth checking corpus composition, not just code changes, whenever an eval score moves unexpectedly.
+
 ---
 
 ## Project Structure
@@ -238,6 +257,8 @@ docsense/
     context.py               # Formats chunks as [Source: file | Page X]
     generator.py             # GPT-4o-mini + @traceable + confidence scoring
     memory.py                # SimpleSummaryMemory + rewrite_query
+    critique.py              # judge_sufficiency() + reformulate_query() — LangGraph reflection LLM calls
+    graph.py                 # LangGraph Reflection state machine: retrieve -> critique -> revise -> respond
   db/
     __init__.py
     sessions.py              # SQLite session persistence
@@ -251,7 +272,7 @@ docsense/
     workflows/
       ci.yml                 # GitHub Actions — lint + pytest
   app.py                     # Streamlit frontend
-  pipeline.py                # ask() + format_response() + @traceable
+  pipeline.py                # ask() invokes generation/graph.py's compiled LangGraph + format_response() + @traceable
   Dockerfile
   docker-compose.yml
   requirements.txt
@@ -277,6 +298,7 @@ docsense/
 | CI/CD | GitHub Actions | Push to main triggers run |
 | Observability | LangSmith | smith.langchain.com project: docsense |
 | Evaluation | LLM-as-judge | GPT-4o-mini scorer |
+| Agent orchestration | LangGraph | Reflection pattern: retrieve → critique → revise → respond |
 
 ---
 

@@ -52,7 +52,12 @@ def run_evaluation():
 
     for i, item in enumerate(EVAL_QUESTIONS, 1):
         print(f"[{i}/{len(EVAL_QUESTIONS)}] {item['question'][:60]}...")
-        result = ask(item['question'], rerank_enabled=True)
+        # All 15 questions were written against demo_corpus/sample.pdf specifically.
+        # The shared index has since grown to include unrelated documents
+        # (sample2.pdf, biology-11-00233.pdf) — scope to sample.pdf so this
+        # stays a fair, apples-to-apples measurement of retrieval/generation
+        # quality, not a test of how much unrelated content got added later.
+        result = ask(item['question'], rerank_enabled=True, source_filter=['demo_corpus/sample.pdf'])
 
         context = result.get('context', '')
 
