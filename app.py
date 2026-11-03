@@ -44,6 +44,29 @@ st.set_page_config(
     layout='wide'
 )
 
+# ── Font ──────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"],
+h1, h2, h3, h4, h5, h6, p, label,
+button, input, textarea {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+body, [class*="css"],
+p, label, button, input, textarea {
+    font-size: 13px !important;
+}
+
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] p {
+    font-size: 10px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── Session state initialisation ─────────────────────────
 if 'messages' not in st.session_state:
     st.session_state.messages = []
