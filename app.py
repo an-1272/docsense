@@ -94,7 +94,7 @@ def show_confidence(level: str) -> None:
     badges = {
         'high':   ('High confidence', ':material/check_circle:', 'green'),
         'medium': ('Medium confidence', ':material/info:', 'orange'),
-        'low':    ('Low confidence — treat with caution', ':material/error:', 'red'),
+        'low':    ('Low confidence, treat with caution', ':material/error:', 'red'),
     }
     label, icon, color = badges.get(level, ('Unknown confidence', ':material/help:', 'gray'))
     st.badge(label, icon=icon, color=color)
@@ -143,7 +143,7 @@ with st.sidebar:
     print(f"sidebar done: {time.time() - _start:.2f}s")
 
     # ── Demo document ─────────────────────────────────
-    st.caption('Try it with a demo paper — open it to see what you can ask about:')
+    st.caption('Try it with a demo paper. Open it to see what you can ask about:')
     demo_files = sorted(f for f in os.listdir('demo_corpus') if f.endswith('.pdf'))
     for i, demo_file in enumerate(demo_files):
         meta = DEMO_DOCS.get(demo_file, {})
@@ -197,7 +197,7 @@ with st.sidebar:
                 st.session_state.ingested_files.append(uploaded_file.name)
                 st.session_state.doc_sources[uploaded_file.name] = f"uploads/{uploaded_file.name}"
                 st.session_state.upload_bytes[uploaded_file.name] = pdf_bytes
-                st.success(f'{uploaded_file.name} is ready — ask away', icon=':material/check_circle:')
+                st.success(f'{uploaded_file.name} is ready. Ask away!', icon=':material/check_circle:')
 
     # ── Ingested files list (each openable in the viewer) ──
     if st.session_state.ingested_files:

@@ -57,7 +57,7 @@ def format_response(result: dict) -> str:
             if 'Temp' in source or 'tmp' in source.lower():
                 continue
             label = 'Document Summary' if s['page'] == 0 else f"Page {s['page']}"
-            key = f"{source} — {label}"
+            key = f"{source}, {label}"
             if key not in seen:
                 output.append(f'  • {key}')
                 seen.add(key)
