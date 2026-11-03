@@ -6,14 +6,25 @@ import json
 import time
 from datetime import datetime
 from dotenv import load_dotenv
+import os
+from openai import OpenAI
 from azure_client import get_openai_client, CHAT_MODEL
 
 load_dotenv()
-client = get_openai_client()
+
+# The JUDGE must stay constant while the system under test changes, or a score
+# difference can't be attributed to the backend. All historical baselines were
+# judged by OpenAI gpt-4o-mini, so keep that judge whenever an OpenAI key exists,
+# even when USE_AZURE=true switches the app's own model. Fall back to the app's
+# client only if there is no OpenAI key (all-Azure environment).
+if os.getenv('OPENAI_API_KEY'):
+    client, JUDGE_MODEL = OpenAI(), 'gpt-4o-mini'
+else:
+    client, JUDGE_MODEL = get_openai_client(), CHAT_MODEL
 
 
 def score_answer(question: str, answer: str, ground_truth: str, context: str) -> dict:
-    """Use GPT-4o-mini as judge to score faithfulness and relevancy."""
+    """LLM-as-judge (JUDGE_MODEL, fixed across backends) scores faithfulness and relevancy."""
     prompt = f"""You are evaluating a RAG system. Score the following answer on two metrics.
 
 Question: {question}
@@ -30,7 +41,7 @@ Respond in JSON only:
 {{"faithfulness": 0.0, "answer_relevancy": 0.0}}"""
 
     response = client.chat.completions.create(
-        model=CHAT_MODEL,
+        model=JUDGE_MODEL,
         max_tokens=100,
         messages=[{'role': 'user', 'content': prompt}]
     )
@@ -45,6 +56,7 @@ Respond in JSON only:
 def run_evaluation():
     print("Running DocSense evaluation (LLM-as-judge)...")
     print(f"Total questions: {len(EVAL_QUESTIONS)}\n")
+    print(f"Answer model: {CHAT_MODEL} | Judge: {JUDGE_MODEL}\n")
 
     results = []
     total_faithfulness = 0.0

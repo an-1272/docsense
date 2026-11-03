@@ -92,6 +92,19 @@ if ($envVars['USE_AZURE_SEARCH'] -eq 'true') {
 } else {
     $appEnv += "USE_AZURE_SEARCH=false"   # explicit, so flipping .env back to false really rolls back to Pinecone
 }
+if ($envVars['USE_AZURE'] -eq 'true') {
+    foreach ($k in "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_DEPLOYMENT_NAME", "AZURE_OPENAI_EMBEDDING_DEPLOYMENT") {
+        if (-not $envVars[$k]) { throw "USE_AZURE=true but $k missing from .env" }
+    }
+    $secrets += "azure-openai-key=$($envVars['AZURE_OPENAI_API_KEY'])"
+    $appEnv += "USE_AZURE=true",
+               "AZURE_OPENAI_ENDPOINT=$($envVars['AZURE_OPENAI_ENDPOINT'])",
+               "AZURE_OPENAI_API_KEY=secretref:azure-openai-key",
+               "AZURE_OPENAI_DEPLOYMENT_NAME=$($envVars['AZURE_OPENAI_DEPLOYMENT_NAME'])",
+               "AZURE_OPENAI_EMBEDDING_DEPLOYMENT=$($envVars['AZURE_OPENAI_EMBEDDING_DEPLOYMENT'])"
+} else {
+    $appEnv += "USE_AZURE=false"   # explicit, so flipping .env back to false really rolls back to the OpenAI API
+}
 if ($envVars['LANGSMITH_API_KEY']) {
     $secrets += "langsmith-key=$($envVars['LANGSMITH_API_KEY'])"
     $appEnv += "LANGSMITH_API_KEY=secretref:langsmith-key", "LANGSMITH_TRACING=true",

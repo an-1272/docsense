@@ -1,0 +1,130 @@
+{
+  "timestamp": "20261103_185254",
+  "summary": {
+    "faithfulness": 0.867,
+    "answer_relevancy": 0.833,
+    "total_questions": 15
+  },
+  "details": [
+    {
+      "question": "Who are the authors of the green flashes paper?",
+      "answer": "The authors of the paper \"Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm\" are Gilbert Green and Naomi Watanabe.",
+      "ground_truth": "The authors are Gilbert Green and Naomi Watanabe.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What institution are the authors affiliated with?",
+      "answer": "The authors, Gilbert Green and Naomi Watanabe, are affiliated with the Department of Chemistry and Physics at Florida Gulf Coast University (FGCU), located in Fort Myers, FL. Additionally, Gilbert Green is also associated with the Space Telescope Science Institution in Baltimore, MD [Source: sample.pdf, Page 1].",
+      "ground_truth": "The authors are affiliated with Florida Gulf Coast University and the Space Telescope Science Institute.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the main topic of the paper?",
+      "answer": "The main topic of the paper is the observation and analysis of unique green flashes seen in optical and infrared wavelengths during an extreme electric storm in Southwest Florida, specifically exploring how these flashes correlate with atmospheric conditions and lightning activity.",
+      "ground_truth": "The paper studies green flashes observed in optical and infrared during an extreme electric storm.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What causes the green and blue colors in lightning flashes?",
+      "answer": "The green and blue colors in lightning flashes are primarily caused by interactions involving oxygen atoms and molecules. Specifically, blue to emerald-green light emission occurs when the lightning discharge collides with oxygen atoms (O), while pinkish or violet light relates to collisions with nitrogen molecules (N2 or N2+). Changes in the lightning discharge behavior, such as shifts in polarity or direction in a bidirectional leader or recoil leader within the cloud, can cause these variations in color as the discharge emits light from different atomic or molecular collisions. Additionally, oceanic flashes' higher optical power and energy may favor the propagation of green-blue light through clean air above the ocean, possibly enhancing these colors [Pages 10, 13, 14].\n\nIn short, blue to green colors in lightning arise mainly from collisions with oxygen atoms emitting blue to emerald-green light, while nitrogen ions tend to produce pinkish or violet hues.",
+      "ground_truth": "The colors are caused by interactions of the discharge with oxygen atoms, which emit blue to emerald-green light.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What date was the storm observed?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "The storm was observed on 17 April 2023.",
+      "confidence": "low",
+      "faithfulness": 0.0,
+      "answer_relevancy": 0.0
+    },
+    {
+      "question": "What is the role of atmospheric concentration in the observed coloration?",
+      "answer": "The atmospheric concentration plays a key role in the observed coloration of lightning flashes. The study indicates that the specific molecular concentrations in the atmosphere contribute significantly to the unique spectral lines and colored luminosity seen in the lightning events. This is supported by detailed meteorological analysis, spectrum observations, and interferometer examination of cloud flashes, which help establish that atmospheric concentration is the most significant contributor to the visual coloration. In other words, variations in atmospheric molecules impact the wavelength of the emitted light, producing the distinctive colors captured in the observations [Source: sample.pdf, Pages 1 and 15].",
+      "ground_truth": "Atmospheric concentration is the most significant contributor to the visual coloration observed in the green flashes.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What instruments were used in the study?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "The study used optical and infrared observation equipment including GLM data for lightning location mapping.",
+      "confidence": "low",
+      "faithfulness": 0.0,
+      "answer_relevancy": 0.0
+    },
+    {
+      "question": "What is GLM data?",
+      "answer": "GLM data refers to information collected by the Geostationary Lightning Mapper (GLM), which is a satellite-based lightning detection system. It detects changes in cloud-top illumination and optical energy, particularly in the wavelength around 777.4 nm. The GLM captures data at a high frame rate\u2014500 frames per second, which corresponds to 2 milliseconds per frame. It detects optical emissions from both cloud lightning and cloud-to-ground lightning flashes.\n\nGLM data includes information such as the location and height of specific lightning discharges, the entire propagation path of a flash, and the intensity of flash luminosity, with group energy being used as a measure of that intensity. The system can detect events with very low energy, down to 1 femtojoule (1 \u00d7 10\u207b\u00b9\u2075 joules). These data points are synchronized with GPS and timestamps to correlate with other lightning location systems [Source: sample.pdf, Pages 3-4].",
+      "ground_truth": "GLM refers to Geostationary Lightning Mapper data used to track lightning flash locations.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What causes pinkish and violet colors in lightning?",
+      "answer": "The pinkish and violet colors in lightning are caused by collisions between electrons and nitrogen molecules (N2) or nitrogen ions (N2+). When high-energy electrons collide with these nitrogen species, the electrons in the nitrogen atoms and ions get excited to higher energy levels, and when they return to lower energy states, they emit light in the pinkish to violet wavelengths. This corresponds to light at shorter wavelengths compared to other colors observed in lightning [Source: sample.pdf, Pages 10, 13, 14].",
+      "ground_truth": "Pinkish and violet colors are caused by collisions with nitrogen molecules and ions.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "Where was the study conducted?",
+      "answer": "The study was conducted in Southwest Florida, specifically at Latitude N 26.34\u00b0 and Longitude W 81.79\u00b0, in the Bonita Spring area. The observations took place from 01:00 UTC to 07:00 UTC on 17 April 2023 [Source: sample.pdf, Pages 1, 3].",
+      "ground_truth": "The study was conducted in Florida, with coordinates around 25.95N to 26.35N and 81.5W to 82.0W.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What journal was this paper published in?",
+      "answer": "The paper was published in the journal \"Applied Sciences\" in 2024.",
+      "ground_truth": "The paper was published in Applied Sciences (Appl. Sci.) in 2024.",
+      "confidence": "medium",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the significance of oceanic flashes in the study?",
+      "answer": "Oceanic flashes are significant in the study because they tend to have higher optical power, energy, and brightness compared to lightning over land, indicating a physical distinction in their nature. These flashes are typically larger and more energetic, capable of longer horizontal propagation over the ocean. This suggests that the oceanic environment affects the characteristics of lightning discharges, possibly through interactions with atmospheric constituents like oxygen, which might influence the light emission spectrum towards blue and green wavelengths. Additionally, the clean air above the ocean may allow selective propagation of green-blue light from these flashes over considerable distances. These distinctive features of oceanic flashes provide important clues about lightning dynamics and the atmospheric conditions over oceanic versus land regions [Source: sample.pdf, Pages 2, 13].",
+      "ground_truth": "Oceanic flashes have higher optical power and energy, and may transmit green-blue light through clean air above the ocean.",
+      "confidence": "high",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the capital of France?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "I could not find a reliable answer to that in the provided documents.",
+      "confidence": "low",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "Who won the FIFA World Cup in 2022?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "ground_truth": "I could not find a reliable answer to that in the provided documents.",
+      "confidence": "low",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What is the boiling point of water?",
+      "answer": "The document you shared doesn't seem to cover the boiling point of water. If you want, I can help explain anything else from the content you provided!",
+      "ground_truth": "I could not find a reliable answer to that in the provided documents.",
+      "confidence": "medium",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5
+    }
+  ]
+}
