@@ -41,17 +41,20 @@ LLM-as-judge harness (`eval/run_eval.py`) over a fixed 15-question set: 12 answe
 
 | Metric | Score | Target |
 |---|---|---|
-| Faithfulness (claims supported by retrieved context) | **0.83** | > 0.80 |
-| Answer relevancy (answer addresses the question) | **0.87** | > 0.70 |
+| Stack | Faithfulness | Answer relevancy |
+|---|---|---|
+| OpenAI gpt-4o-mini + Pinecone | 0.83 | 0.87 |
+| OpenAI gpt-4o-mini + Azure AI Search | 0.83 | 0.84 |
+| **Azure OpenAI gpt-4.1-mini + Azure AI Search (live)** | **0.87** | **0.83** |
 
-Latest run: `eval/results_20261103_174426.json`. The two remaining misses are questions where the right passage is retrieved but scores under the 0.1 relevance cutoff. The cutoff is kept on purpose: lowering it to pass a 15-question test set would loosen the hallucination guard for every future document.
+Targets: faithfulness > 0.80, relevancy > 0.70. Every run is graded by the same fixed judge (OpenAI `gpt-4o-mini`), so a change in the system under test can't be confused with a change in the grader. Latest run: `eval/results_20261103_185254.json`. The two remaining misses are questions where the right passage is retrieved but scores under the 0.1 relevance cutoff. The cutoff is kept on purpose: lowering it to pass a 15-question test set would loosen the hallucination guard for every future document.
 
 ## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Parsing / chunking | PyMuPDF, LangChain text splitter (400 chars, 160 overlap) |
-| Embeddings / LLM | OpenAI `text-embedding-3-small`, `gpt-4o-mini` |
+| Embeddings / LLM | **Azure OpenAI**: `gpt-4.1-mini` (answers), `text-embedding-3-small` (embeddings) |
 | Retrieval store | **Azure AI Search** hybrid vector + BM25 (production), Pinecone (rollback), ChromaDB (local dev) |
 | Reranking | Cohere `rerank-english-v3.0` (cross-encoder) |
 | Orchestration | LangGraph (Reflection pattern) |
@@ -59,9 +62,9 @@ Latest run: `eval/results_20261103_174426.json`. The two remaining misses are qu
 | Sessions | SQLite |
 | Observability | LangSmith tracing |
 | CI | GitHub Actions: flake8 + unit tests on every push |
-| Hosting | Docker, Azure Container Registry, **Azure Container Apps** (scale to zero, keys stored as Container App secrets), **Azure AI Search** |
+| Hosting | Docker, Azure Container Registry, **Azure Container Apps** (scale to zero, keys stored as Container App secrets), **Azure AI Search**, **Azure OpenAI** |
 
-Retrieval runs on **Azure AI Search** (hybrid vector + keyword), migrated from Pinecone and validated by the eval harness before cutover: faithfulness 0.83 / relevancy 0.84 on Azure versus 0.83 / 0.87 on Pinecone. Backends are switched by feature flags (`USE_AZURE_SEARCH`, `USE_PINECONE`), so rolling back is a config change. An Azure OpenAI backend (`USE_AZURE`) is implemented and pending validation; generation currently uses the OpenAI API.
+Retrieval runs on **Azure AI Search** (hybrid vector + keyword), migrated from Pinecone and validated by the eval harness before cutover: faithfulness 0.83 / relevancy 0.84 on Azure versus 0.83 / 0.87 on Pinecone. Backends are switched by feature flags (`USE_AZURE_SEARCH`, `USE_PINECONE`), so rolling back is a config change. Models run on **Azure OpenAI** (`USE_AZURE`): the original `gpt-4o-mini` can no longer be deployed on Azure, so answers use `gpt-4.1-mini`, the closest drop-in. Azure and OpenAI `text-embedding-3-small` vectors were measured identical (cosine 1.00000), so the index carried over without re-embedding. The whole stack, every component switchable by flag, now runs on Azure.
 
 ## Engineering notes
 
@@ -89,7 +92,7 @@ pip install -r requirements.txt
 Create a `.env` file:
 
 ```
-OPENAI_API_KEY=...
+OPENAI_API_KEY=...                # OpenAI path + the eval judge
 COHERE_API_KEY=...
 PINECONE_API_KEY=...
 PINECONE_INDEX_NAME=docsense
@@ -99,6 +102,12 @@ USE_AZURE_SEARCH=false
 AZURE_SEARCH_ENDPOINT=https://<service>.search.windows.net
 AZURE_SEARCH_KEY=...
 AZURE_SEARCH_INDEX=docsense
+# optional: Azure OpenAI
+USE_AZURE=false
+AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com/
+AZURE_OPENAI_API_KEY=...
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4.1-mini
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-small
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=...
 LANGSMITH_PROJECT=docsense

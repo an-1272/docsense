@@ -87,7 +87,7 @@ Status values: **Accepted** (in production code and measured), **Accepted — pe
 
 ## ADR-007 — OpenAI API → Azure OpenAI Service (behind a flag)
 
-**Status:** Accepted — pending live validation · commit `dec5a3b`
+**Status:** Accepted · **live since 2026-11-03** · code `dec5a3b`, cutover `f1186ed`
 
 **Context.** Enterprise deployments typically need model traffic to stay inside their cloud tenancy: data residency, private networking, Entra ID / RBAC instead of a shared API key, and Azure's content-filtering and audit tooling.
 
@@ -96,6 +96,8 @@ Status values: **Accepted** (in production code and measured), **Accepted — pe
 **Why a factory, not if/else at each call site.** One place to get the Azure-specific details right (endpoint, API version, deployment names vs model names), and one place a future model or API-version bump has to touch.
 
 **Trade-offs.** Azure OpenAI needs access approval and per-model *deployments*. New models arrive on Azure later than on OpenAI. The flag keeps the OpenAI path as the working default until Azure is validated.
+
+**What actually happened (2026-11-03).** `gpt-4o-mini` (2024-07-18) was in Azure's deprecating state and rejected new deployments, so the answer model became `gpt-4.1-mini`: same non-reasoning family and request parameters, no code change (newer reasoning models need `max_completion_tokens` and may drop `temperature`). It retires on Azure 2027-04-14; the deployment name is config, so moving later is an `.env` change plus an eval run. Embeddings: Azure and OpenAI `text-embedding-3-small` produced identical vectors (cosine 1.00000), so the existing index needed no re-embedding. The eval judge was pinned to OpenAI `gpt-4o-mini` so the grader didn't change along with the system under test. All-Azure eval: faithfulness 0.87 / relevancy 0.83. Live traffic confirmed in Azure OpenAI token metrics.
 
 ---
 
