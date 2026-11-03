@@ -47,7 +47,21 @@ LLM-as-judge harness (`eval/run_eval.py`) over a fixed 15-question set: 12 answe
 | OpenAI gpt-4o-mini + Azure AI Search | 0.83 | 0.84 |
 | **Azure OpenAI gpt-4.1-mini + Azure AI Search (live)** | **0.87** | **0.83** |
 
-Targets: faithfulness > 0.80, relevancy > 0.70. Every run is graded by the same fixed judge (OpenAI `gpt-4o-mini`), so a change in the system under test can't be confused with a change in the grader. Latest run: `eval/results_20261103_185254.json`. The two remaining misses are questions where the right passage is retrieved but scores under the 0.1 relevance cutoff. The cutoff is kept on purpose: lowering it to pass a 15-question test set would loosen the hallucination guard for every future document.
+### RAGAS
+
+The same 15 questions are also scored with **RAGAS** (`eval/run_ragas.py`), which adds retrieval-quality metrics the custom harness doesn't have. Live stack, same fixed judge:
+
+| Metric | What it measures | Score |
+|---|---|---|
+| Context precision | Retrieved passages are relevant and ranked near the top | **0.78** |
+| Context recall | Retrieval found what the reference answer needs | **0.88** |
+| Faithfulness | Claims are supported by the retrieved passages | **0.93** |
+| Answer relevancy | The answer addresses the question | **0.85** |
+| Out-of-scope refusals | Declined instead of answering from general knowledge | **3/3** |
+
+Retrieval metrics cover all 12 answerable questions, including the two the confidence gate blocked; both of those have context recall 1.0, which confirms the right passages were retrieved and the conservative gate, not retrieval, is why they fall back. Answer metrics cover the 10 answered questions. Results: `eval/ragas_results_20261103_205524.json`.
+
+Targets for the custom harness: faithfulness > 0.80, relevancy > 0.70. Every run is graded by the same fixed judge (OpenAI `gpt-4o-mini`), so a change in the system under test can't be confused with a change in the grader. Latest run: `eval/results_20261103_185254.json`. The two remaining misses are questions where the right passage is retrieved but scores under the 0.1 relevance cutoff. The cutoff is kept on purpose: lowering it to pass a 15-question test set would loosen the hallucination guard for every future document.
 
 ## Tech stack
 
@@ -120,7 +134,8 @@ Then:
 ```bash
 streamlit run app.py             # app on http://localhost:8501
 pytest tests/ -v                 # unit tests, no API calls
-python -m eval.run_eval          # evaluation harness (uses API credits)
+python -m eval.run_eval          # custom LLM-as-judge harness (uses API credits)
+pip install -r requirements-eval.txt && python -m eval.run_ragas   # RAGAS evaluation
 docker compose up                # or run in Docker
 ```
 
@@ -134,7 +149,7 @@ pipeline.py             ask(): runs the LangGraph state machine
 generation/             graph.py (Reflection), critique.py, generator.py, memory.py, prompts.py
 retrieval/              Pinecone / ChromaDB / Azure AI Search + rerank, scope_detect.py
 ingestion/              parser, chunker, title_chunk.py, embedders
-eval/                   15-question dataset, LLM-as-judge runner, results
+eval/                   15-question dataset, LLM-as-judge runner, RAGAS runner, results
 tests/                  unit tests (run in CI)
 deploy/                 Azure Container Apps deploy script, Azure AI Search index setup
 docs/ADR.md             architecture decision record
