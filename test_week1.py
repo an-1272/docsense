@@ -2,7 +2,7 @@ from ingestion import ingest
 from retrieval.search import search
 
 # Step 1: ingest a document
-n = ingest("demo_corpus/sample.pdf")
+n = ingest("eval/corpus/sample.pdf", source_name="demo_corpus/sample.pdf")
 print(f'Ingested {n} chunks')
 
 # Step 2: query it

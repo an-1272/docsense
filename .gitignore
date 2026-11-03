@@ -9,3 +9,4 @@ db/
 # Personal notes / prep docs (not part of the app)
 *.pdf
 !demo_corpus/*.pdf
+!eval/corpus/*.pdf

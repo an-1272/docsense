@@ -52,7 +52,8 @@ def run_evaluation():
 
     for i, item in enumerate(EVAL_QUESTIONS, 1):
         print(f"[{i}/{len(EVAL_QUESTIONS)}] {item['question'][:60]}...")
-        # All 15 questions were written against demo_corpus/sample.pdf specifically.
+        # All 15 questions were written against the green-flashes paper (file now at
+        # eval/corpus/sample.pdf, still indexed under source "demo_corpus/sample.pdf").
         # The shared index has since grown to include unrelated documents
         # (sample2.pdf, biology-11-00233.pdf) — scope to sample.pdf so this
         # stays a fair, apples-to-apples measurement of retrieval/generation

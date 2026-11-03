@@ -1,4 +1,4 @@
 from ingestion import ingest
 
-n = ingest("demo_corpus/sample.pdf")
+n = ingest("eval/corpus/sample.pdf", source_name="demo_corpus/sample.pdf")
 print(f'Done — ingested {n} chunks')

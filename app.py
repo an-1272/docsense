@@ -75,6 +75,8 @@ if 'ingested_files' not in st.session_state:
     st.session_state.ingested_files = []
 if 'doc_sources' not in st.session_state:
     st.session_state.doc_sources = {}   # display name -> full `source` metadata value
+if 'upload_bytes' not in st.session_state:
+    st.session_state.upload_bytes = {}  # uploaded filename -> PDF bytes (for the in-app viewer)
 if 'demo_mode' not in st.session_state:
     st.session_state.demo_mode = False
 if 'memory' not in st.session_state:
@@ -96,6 +98,37 @@ def confidence_badge(level: str) -> str:
     }
     return badges.get(level, '⚪ Unknown')
 
+# Display metadata for files in demo_corpus/ (filename -> card info).
+# A PDF dropped into demo_corpus/ without an entry here still works, just with a plain card.
+DEMO_DOCS = {
+    'The Honey Bee Apis mellifera - An Insect at the Interface between Human and Ecosystem Health.pdf': {
+        'title': 'The Honey Bee Apis mellifera: An Insect at the Interface between Human and Ecosystem Health',
+        'byline': 'Papa, G. et al. · Biology (MDPI), 2022 · 24 pages',
+        'license': 'Open access, CC BY 4.0 · doi.org/10.3390/biology11020233',
+    },
+}
+
+@st.cache_data(show_spinner=False)
+def read_pdf_bytes(path: str) -> bytes:
+    with open(path, 'rb') as f:
+        return f.read()
+
+def get_pdf_bytes(name: str) -> bytes | None:
+    """PDF bytes for any document in this session: demo files from disk, uploads from session state."""
+    if name in st.session_state.upload_bytes:
+        return st.session_state.upload_bytes[name]
+    path = os.path.join('demo_corpus', name)
+    return read_pdf_bytes(path) if os.path.exists(path) else None
+
+@st.dialog('📄 Document viewer', width='large')
+def show_pdf(name: str):
+    st.caption(DEMO_DOCS.get(name, {}).get('title', name))
+    data = get_pdf_bytes(name)
+    if data is None:
+        st.error('This document is no longer available to view.')
+        return
+    st.pdf(data, height=720)
+
 # ── Page header ──────────────────────────────────────────
 st.title('📄 DocSense')
 st.caption('Intelligent document Q&A with source grounding')
@@ -108,18 +141,37 @@ with st.sidebar:
 
     print(f"sidebar done: {time.time() - _start:.2f}s")
 
-    # ── Demo mode ─────────────────────────────────────
-    if st.button('▶  Load Demo Documents', use_container_width=True):
-        demo_files = [f for f in os.listdir('demo_corpus') if f.endswith('.pdf')]
+    # ── Demo document ─────────────────────────────────
+    st.caption('Try it with a demo paper — open it to see what you can ask about:')
+    demo_files = sorted(f for f in os.listdir('demo_corpus') if f.endswith('.pdf'))
+    for i, demo_file in enumerate(demo_files):
+        meta = DEMO_DOCS.get(demo_file, {})
+        with st.container(border=True):
+            st.markdown(f"**{meta.get('title', demo_file)}**")
+            if meta.get('byline'):
+                st.caption(meta['byline'])
+            if meta.get('license'):
+                st.caption(meta['license'])
+            b_open, b_dl = st.columns(2)
+            if b_open.button('👁 Open', key=f'open_demo_{i}', use_container_width=True):
+                show_pdf(demo_file)
+            b_dl.download_button(
+                '📥 Download', data=get_pdf_bytes(demo_file), file_name=demo_file,
+                mime='application/pdf', key=f'dl_demo_{i}', use_container_width=True
+            )
+
+    all_loaded = all(f in st.session_state.ingested_files for f in demo_files)
+    if st.button('✅ Demo loaded' if all_loaded else '▶  Load demo into DocSense',
+                 use_container_width=True, disabled=all_loaded or not demo_files):
         for demo_file in demo_files:
             path = os.path.join('demo_corpus', demo_file)
             if demo_file not in st.session_state.ingested_files:
-                with st.spinner(f'Loading {demo_file}...'):
+                with st.spinner('Loading demo paper...'):
                     ingest(path, source_name=f"demo_corpus/{demo_file}")
                     st.session_state.ingested_files.append(demo_file)
                     st.session_state.doc_sources[demo_file] = f"demo_corpus/{demo_file}"
         st.session_state.demo_mode = True
-        st.success(f'Loaded {len(demo_files)} demo document(s)')
+        st.rerun()
 
     st.divider()
 
@@ -133,22 +185,27 @@ with st.sidebar:
     if uploaded_files:
         for uploaded_file in uploaded_files:
             if uploaded_file.name not in st.session_state.ingested_files:
+                pdf_bytes = uploaded_file.getvalue()
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-                    tmp.write(uploaded_file.read())
+                    tmp.write(pdf_bytes)
                     tmp_path = tmp.name
                 with st.spinner(f'Processing {uploaded_file.name}...'):
                     n = ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
                 os.unlink(tmp_path)
                 st.session_state.ingested_files.append(uploaded_file.name)
                 st.session_state.doc_sources[uploaded_file.name] = f"uploads/{uploaded_file.name}"
+                st.session_state.upload_bytes[uploaded_file.name] = pdf_bytes
                 st.success(f'✅ {uploaded_file.name} — {n} chunks indexed')
 
-    # ── Ingested files list ───────────────────────────
+    # ── Ingested files list (each openable in the viewer) ──
     if st.session_state.ingested_files:
         st.divider()
         st.caption('Indexed documents:')
-        for fname in st.session_state.ingested_files:
-            st.markdown(f'• {fname}')
+        for i, fname in enumerate(st.session_state.ingested_files):
+            name_col, open_col = st.columns([4, 1])
+            name_col.markdown(f"• {DEMO_DOCS.get(fname, {}).get('title', fname)}")
+            if open_col.button('👁', key=f'open_indexed_{i}', help='Open in viewer'):
+                show_pdf(fname)
 
     # ── Document scope ────────────────────────────────
     doc_scope = []
@@ -191,7 +248,7 @@ with col_chat:
     st.subheader('💬 Ask a question')
 
     if not st.session_state.ingested_files:
-        st.info('👈 Upload a document or load the demo to get started.')
+        st.info('👈 Load the demo paper (open it first to see what it covers) or upload your own PDF to get started.')
     else:
         # ── Conversation history ──────────────────────
         for msg in st.session_state.messages:
