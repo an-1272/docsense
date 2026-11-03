@@ -297,6 +297,12 @@ After moving the old demo PDFs to `eval/corpus/`, they still ended up in the ima
 
 **Gotcha (not a bug): a browser tab open across a redeploy keeps the old Streamlit session.** Twice "the new version isn't live" was this — Azure already had 100% traffic on the new revision (`az containerapp revision list`). Reload the page.
 
+**Parked 2026-11-03 (user: "we will get back to that later"):**
+- UI emoji-free (Material icons, st.badge confidence) and demo-card Open/Download are icon-only with tooltips: LIVE.
+- Em dashes removed from UI strings (`app.py`, `pipeline.py`): committed + pushed (`d2ec285`) but **NOT deployed** (deploy blocked by a transient tool error). Next step: rebuild + `deploy\deploy_azure.ps1`.
+- Answers can still contain em dashes because `generation/prompts.py` (locked) uses them. Options offered: (1) edit system prompt + "don't use em dashes" line, re-run eval (recommended, needs explicit user approval); (2) post-process answers in app. Undecided.
+- Session 9 Issue 3 (confidence/critique decided by summary chunk) also still awaiting a decision.
+
 ---
 
 ## Project Structure
