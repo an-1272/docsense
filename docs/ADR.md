@@ -137,3 +137,23 @@ Status values: **Accepted** (in production code and measured), **Accepted — pe
 - AKS would be heavy over-provisioning for a single container.
 
 **Known limitation.** SQLite session history (`db/sessions.db`) lives on the container's ephemeral filesystem, so it resets on restart or scale-to-zero. That's acceptable for a demo. The production fix is an Azure Files volume mount, or moving sessions to a managed store.
+
+---
+
+## ADR-010: Secrets in Azure Key Vault via managed identity
+
+**Status:** Accepted · live since 2026-11-03
+
+**Context.** Six API keys (OpenAI, Cohere, Pinecone, LangSmith, Azure AI Search, Azure OpenAI) were stored as Container App secrets, written from `.env` on every deploy. That keeps them out of the image and code, but the values still live in the app's configuration, every deploy re-sends them, and rotation means editing `.env` and redeploying. The app also authenticated to the container registry with an admin password.
+
+**Decision.** Store the keys in Azure Key Vault (RBAC authorization, soft delete on). Give the Container App a system-assigned managed identity and grant it **Key Vault Secrets User** scoped to that single vault; the human operator gets **Secrets Officer**. The app's secrets become Key Vault references (`keyvaultref:<secret URI>,identityref:system`), resolved at runtime. Image pulls switched from the registry admin password to the same identity with **AcrPull**, and the stored registry password was removed.
+
+**Rationale.**
+- No credential to leak for the app itself: a managed identity has no password or key.
+- Least privilege: the app can read secrets from one vault and pull one registry, nothing else.
+- Rotation is one place: update the secret in the vault; the app picks up the latest version without a code or image change.
+- `deploy/deploy_azure.ps1` sends references, never values, when `KEY_VAULT_NAME` is set, and fails early if a referenced secret is missing from the vault.
+
+**Trade-offs.** A first-time deploy still needs plain secrets (the identity doesn't exist until the app does), then a one-time switch. RBAC role propagation can take a minute after granting access.
+
+**Incident during the migration.** While checking that the vault values matched `.env`, a helper function named `H` collided with PowerShell's built-in `H` alias (Get-History); its error messages printed the key values into the local session output. Nothing reached a public location. Logged for rotation; Key Vault reduces rotation to a vault update. Lesson: when handling secrets in a shell, compare values without any path that can echo them, and avoid short identifiers that may collide with built-ins.

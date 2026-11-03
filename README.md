@@ -62,7 +62,8 @@ Targets: faithfulness > 0.80, relevancy > 0.70. Every run is graded by the same 
 | Sessions | SQLite |
 | Observability | LangSmith tracing |
 | CI | GitHub Actions: flake8 + unit tests on every push |
-| Hosting | Docker, Azure Container Registry, **Azure Container Apps** (scale to zero, keys stored as Container App secrets), **Azure AI Search**, **Azure OpenAI** |
+| Hosting | Docker, Azure Container Registry, **Azure Container Apps** (scale to zero), **Azure AI Search**, **Azure OpenAI** |
+| Secrets | **Azure Key Vault** (RBAC), read at runtime by the app's **managed identity**; image pulls from ACR also use the managed identity, so the app holds no passwords |
 
 Retrieval runs on **Azure AI Search** (hybrid vector + keyword), migrated from Pinecone and validated by the eval harness before cutover: faithfulness 0.83 / relevancy 0.84 on Azure versus 0.83 / 0.87 on Pinecone. Backends are switched by feature flags (`USE_AZURE_SEARCH`, `USE_PINECONE`), so rolling back is a config change. Models run on **Azure OpenAI** (`USE_AZURE`): the original `gpt-4o-mini` can no longer be deployed on Azure, so answers use `gpt-4.1-mini`, the closest drop-in. Azure and OpenAI `text-embedding-3-small` vectors were measured identical (cosine 1.00000), so the index carried over without re-embedding. The whole stack, every component switchable by flag, now runs on Azure.
 
@@ -75,6 +76,7 @@ Design decisions and their trade-offs are recorded in **[docs/ADR.md](docs/ADR.m
 - **Eval scores dropped with no code change.** New documents had been added to the shared index, so the harness was silently searching three unrelated papers. The harness now pins its own corpus. A benchmark is only valid for the corpus it was measured on.
 - **Opposite score scales.** Vector distance (lower is better) and rerank relevance (higher is better) were once compared as one scale. Confidence logic now branches on which score is present.
 - **Migrating to Azure AI Search surfaced three bugs in code that had never run.** Chunk IDs (built from file paths) contain `/`, `.` and spaces, which Azure document keys reject, so every upload would have failed; keys are now base64url-encoded. Filenames with an apostrophe broke the OData scope filter; quotes are now escaped. And ingestion only knew Pinecone, so with the Azure flag on, uploads went to Pinecone while questions searched an empty Azure index. Caught by running the eval before switching traffic, not after.
+- **No secrets in the app.** All API keys live in Azure Key Vault. The Container App has a system-assigned managed identity with read-only access (Key Vault Secrets User) scoped to that one vault, and its secrets are Key Vault references, not values. The registry password was removed too: image pulls use the same identity (AcrPull). Rotating a key means updating the vault; nothing in code, the image or app config changes.
 - **Public deployment hardening.** The empty scope picker originally searched the whole shared index, which would expose other visitors' uploads; it now searches only the current session's documents.
 
 ## Run locally
@@ -122,7 +124,7 @@ python -m eval.run_eval          # evaluation harness (uses API credits)
 docker compose up                # or run in Docker
 ```
 
-Deploy to Azure Container Apps: `deploy/deploy_azure.ps1` (builds nothing in the cloud; pushes the local image to ACR and creates or updates the app, reading keys from `.env` into Container App secrets).
+Deploy to Azure Container Apps: `deploy/deploy_azure.ps1`. With `KEY_VAULT_NAME` set in `.env`, the script sends Key Vault references (and fails early if a secret is missing from the vault) instead of key values; (builds nothing in the cloud; pushes the local image to ACR and creates or updates the app, reading keys from `.env` into Container App secrets).
 
 ## Project structure
 

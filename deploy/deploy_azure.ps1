@@ -68,11 +68,17 @@ if (-not $envExists) {
 }
 
 # ── Secrets + env vars ───────────────────────────────────
-$secrets = @(
-    "openai-key=$($envVars['OPENAI_API_KEY'])",
-    "cohere-key=$($envVars['COHERE_API_KEY'])",
-    "pinecone-key=$($envVars['PINECONE_API_KEY'])"
-)
+# Each secret is declared once (Container App secret name -> .env key).
+# KEY_VAULT_NAME set in .env  -> the app gets Key Vault REFERENCES, resolved at runtime
+#                                by its system-assigned managed identity; no key values
+#                                are sent to the app config. Key Vault is the source of
+#                                truth: rotate a key by updating the vault, not .env.
+# KEY_VAULT_NAME not set      -> values from .env are stored as plain Container App secrets.
+$secretMap = [ordered]@{
+    'openai-key'   = 'OPENAI_API_KEY'
+    'cohere-key'   = 'COHERE_API_KEY'
+    'pinecone-key' = 'PINECONE_API_KEY'
+}
 $appEnv = @(
     "OPENAI_API_KEY=secretref:openai-key",
     "COHERE_API_KEY=secretref:cohere-key",
@@ -84,7 +90,7 @@ if ($envVars['USE_AZURE_SEARCH'] -eq 'true') {
     foreach ($k in "AZURE_SEARCH_ENDPOINT", "AZURE_SEARCH_KEY") {
         if (-not $envVars[$k]) { throw "USE_AZURE_SEARCH=true but $k missing from .env" }
     }
-    $secrets += "azure-search-key=$($envVars['AZURE_SEARCH_KEY'])"
+    $secretMap['azure-search-key'] = 'AZURE_SEARCH_KEY'
     $appEnv += "USE_AZURE_SEARCH=true",
                "AZURE_SEARCH_ENDPOINT=$($envVars['AZURE_SEARCH_ENDPOINT'])",
                "AZURE_SEARCH_KEY=secretref:azure-search-key",
@@ -96,7 +102,7 @@ if ($envVars['USE_AZURE'] -eq 'true') {
     foreach ($k in "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_DEPLOYMENT_NAME", "AZURE_OPENAI_EMBEDDING_DEPLOYMENT") {
         if (-not $envVars[$k]) { throw "USE_AZURE=true but $k missing from .env" }
     }
-    $secrets += "azure-openai-key=$($envVars['AZURE_OPENAI_API_KEY'])"
+    $secretMap['azure-openai-key'] = 'AZURE_OPENAI_API_KEY'
     $appEnv += "USE_AZURE=true",
                "AZURE_OPENAI_ENDPOINT=$($envVars['AZURE_OPENAI_ENDPOINT'])",
                "AZURE_OPENAI_API_KEY=secretref:azure-openai-key",
@@ -106,10 +112,19 @@ if ($envVars['USE_AZURE'] -eq 'true') {
     $appEnv += "USE_AZURE=false"   # explicit, so flipping .env back to false really rolls back to the OpenAI API
 }
 if ($envVars['LANGSMITH_API_KEY']) {
-    $secrets += "langsmith-key=$($envVars['LANGSMITH_API_KEY'])"
+    $secretMap['langsmith-key'] = 'LANGSMITH_API_KEY'
     $appEnv += "LANGSMITH_API_KEY=secretref:langsmith-key", "LANGSMITH_TRACING=true",
                "LANGSMITH_ENDPOINT=https://api.smith.langchain.com",
                "LANGSMITH_PROJECT=$(if ($envVars['LANGSMITH_PROJECT']) { $envVars['LANGSMITH_PROJECT'] } else { 'docsense' })"
+}
+
+$keyVault = $envVars['KEY_VAULT_NAME']
+$plainSecrets = @($secretMap.Keys | ForEach-Object { "$_=$($envVars[$secretMap[$_]])" })
+if ($keyVault) {
+    $inVault = @(& $az keyvault secret list --vault-name $keyVault --query "[].name" -o tsv --only-show-errors)
+    $missing = @($secretMap.Keys | Where-Object { $inVault -notcontains $_ })
+    if ($missing.Count) { throw "Key Vault $keyVault is missing secret(s): $($missing -join ', ') (add them with az keyvault secret set)" }
+    $vaultSecrets = @($secretMap.Keys | ForEach-Object { "$_=keyvaultref:https://$keyVault.vault.azure.net/secrets/$_,identityref:system" })
 }
 
 # ── Create or update the app ─────────────────────────────
@@ -121,10 +136,17 @@ if (-not $appExists) {
         --image $image --registry-server $server --registry-username $acr --registry-password $pw `
         --target-port 8501 --ingress external `
         --min-replicas 0 --max-replicas 1 --cpu 1.0 --memory 2.0Gi `
-        --secrets @secrets --env-vars @appEnv -o none
+        --secrets @plainSecrets --env-vars @appEnv -o none
+    # First deploy only: Key Vault references need the app's managed identity, which doesn't
+    # exist until the app does. Run setup once afterwards (see docs), then redeploy.
 } else {
     Write-Host "Updating container app $AppName..."
-    Az containerapp secret set -n $AppName -g $ResourceGroup --secrets @secrets -o none
+    if ($keyVault) {
+        Write-Host "Secrets: Key Vault references ($keyVault), resolved by managed identity"
+        Az containerapp secret set -n $AppName -g $ResourceGroup --secrets @vaultSecrets -o none
+    } else {
+        Az containerapp secret set -n $AppName -g $ResourceGroup --secrets @plainSecrets -o none
+    }
     Az containerapp update -n $AppName -g $ResourceGroup --image $image --set-env-vars @appEnv -o none
 }
 
