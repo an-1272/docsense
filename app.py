@@ -339,8 +339,17 @@ with col_citations:
             source = s['source'].replace('\\', '/')
             if 'Temp' in source or 'tmp' in source.lower():
                 continue
-            key = f"{source} — Page {s['page']}"
+            # Page 0 is the synthetic per-document summary chunk (ingestion/title_chunk.py),
+            # not a real page — meaningless to a reader, so it's not listed.
+            if s['page'] == 0:
+                continue
+            # Show the document's name only — not internal storage prefixes like "uploads/".
+            filename = source.split('/')[-1]
+            doc_name = DEMO_DOCS.get(filename, {}).get('title', filename)
+            key = (source, s['page'])
             if key not in seen:
                 seen.add(key)
                 with st.expander(f"Page {s['page']}", icon=':material/description:', expanded=True):
-                    st.caption(source)
+                    st.caption(doc_name)
+        if not seen:
+            st.caption('This answer drew on the document summary rather than a specific page.')
