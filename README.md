@@ -52,16 +52,16 @@ Latest run: `eval/results_20261103_174426.json`. The two remaining misses are qu
 |---|---|
 | Parsing / chunking | PyMuPDF, LangChain text splitter (400 chars, 160 overlap) |
 | Embeddings / LLM | OpenAI `text-embedding-3-small`, `gpt-4o-mini` |
-| Vector store | Pinecone (production), ChromaDB (local dev) |
+| Retrieval store | **Azure AI Search** hybrid vector + BM25 (production), Pinecone (rollback), ChromaDB (local dev) |
 | Reranking | Cohere `rerank-english-v3.0` (cross-encoder) |
 | Orchestration | LangGraph (Reflection pattern) |
 | Frontend | Streamlit, in-app PDF viewer |
 | Sessions | SQLite |
 | Observability | LangSmith tracing |
 | CI | GitHub Actions: flake8 + unit tests on every push |
-| Hosting | Docker, Azure Container Registry, **Azure Container Apps** (scale to zero, keys stored as Container App secrets) |
+| Hosting | Docker, Azure Container Registry, **Azure Container Apps** (scale to zero, keys stored as Container App secrets), **Azure AI Search** |
 
-Azure OpenAI and Azure AI Search backends are implemented behind feature flags (`USE_AZURE`, `USE_AZURE_SEARCH`) and are being validated; the live app currently runs on OpenAI + Pinecone.
+Retrieval runs on **Azure AI Search** (hybrid vector + keyword), migrated from Pinecone and validated by the eval harness before cutover: faithfulness 0.83 / relevancy 0.84 on Azure versus 0.83 / 0.87 on Pinecone. Backends are switched by feature flags (`USE_AZURE_SEARCH`, `USE_PINECONE`), so rolling back is a config change. An Azure OpenAI backend (`USE_AZURE`) is implemented and pending validation; generation currently uses the OpenAI API.
 
 ## Engineering notes
 
@@ -71,6 +71,7 @@ Design decisions and their trade-offs are recorded in **[docs/ADR.md](docs/ADR.m
 - **A summary chunk the reranker kept throwing away.** Each document gets a synthetic summary chunk so "what is this paper about?" has something to match. Written as labelled metadata, the cross-encoder scored it 0.001 for exactly that question. Rewritten as a prose sentence (wording chosen by measured rerank scores) it scores above 0.92, and eval relevancy rose from 0.73 to 0.87.
 - **Eval scores dropped with no code change.** New documents had been added to the shared index, so the harness was silently searching three unrelated papers. The harness now pins its own corpus. A benchmark is only valid for the corpus it was measured on.
 - **Opposite score scales.** Vector distance (lower is better) and rerank relevance (higher is better) were once compared as one scale. Confidence logic now branches on which score is present.
+- **Migrating to Azure AI Search surfaced three bugs in code that had never run.** Chunk IDs (built from file paths) contain `/`, `.` and spaces, which Azure document keys reject, so every upload would have failed; keys are now base64url-encoded. Filenames with an apostrophe broke the OData scope filter; quotes are now escaped. And ingestion only knew Pinecone, so with the Azure flag on, uploads went to Pinecone while questions searched an empty Azure index. Caught by running the eval before switching traffic, not after.
 - **Public deployment hardening.** The empty scope picker originally searched the whole shared index, which would expose other visitors' uploads; it now searches only the current session's documents.
 
 ## Run locally
@@ -93,6 +94,11 @@ COHERE_API_KEY=...
 PINECONE_API_KEY=...
 PINECONE_INDEX_NAME=docsense
 USE_PINECONE=true
+# optional: Azure AI Search (create the index with: python -m deploy.create_search_index)
+USE_AZURE_SEARCH=false
+AZURE_SEARCH_ENDPOINT=https://<service>.search.windows.net
+AZURE_SEARCH_KEY=...
+AZURE_SEARCH_INDEX=docsense
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=...
 LANGSMITH_PROJECT=docsense
@@ -119,7 +125,7 @@ retrieval/              Pinecone / ChromaDB / Azure AI Search + rerank, scope_de
 ingestion/              parser, chunker, title_chunk.py, embedders
 eval/                   15-question dataset, LLM-as-judge runner, results
 tests/                  unit tests (run in CI)
-deploy/                 Azure Container Apps deploy script
+deploy/                 Azure Container Apps deploy script, Azure AI Search index setup
 docs/ADR.md             architecture decision record
 ```
 

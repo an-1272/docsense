@@ -101,7 +101,7 @@ Status values: **Accepted** (in production code and measured), **Accepted — pe
 
 ## ADR-008 — Pinecone → Azure AI Search (behind a flag)
 
-**Status:** Accepted — pending live validation · commit `dec5a3b`
+**Status:** Accepted · **live since 2026-11-03** · code `dec5a3b`, fixes + cutover `4b82f2d`
 
 **Context.** Pinecone is pure vector search, and it's an external vendor outside the Azure tenancy.
 
@@ -113,7 +113,9 @@ Status values: **Accepted** (in production code and measured), **Accepted — pe
 
 **Detail.** The filter uses `search.in(source, ..., '|')` rather than a `,` delimiter, so a filename containing a comma can't break scoping.
 
-**Trade-offs.** Paid tiers cost more than Pinecone's free tier, and the index schema must be defined explicitly up front (`id`, `text`, `source`, `page`, `content_vector` 1536-d).
+**Trade-offs.** Paid tiers cost more than Pinecone's free tier (the demo runs on the Free tier: 50 MB, 3 indexes), and the index schema must be defined explicitly up front; it lives in code at `deploy/create_search_index.py`.
+
+**Validation before cutover (2026-11-03).** The first real run found three bugs in the never-executed code: document keys built from file paths are invalid Azure keys (now base64url), apostrophes broke the OData filter (now escaped), and `ingest()` never routed to Azure Search, so uploads would have gone to Pinecone while retrieval read an empty index. After the fixes, the eval harness on Azure scored faithfulness 0.83 / relevancy 0.84 against Pinecone's 0.83 / 0.87; the only delta is a known judge-rubric quirk on a correctly refused question. Pinecone stays populated as a one-flag rollback.
 
 ---
 
