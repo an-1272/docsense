@@ -1,0 +1,301 @@
+{
+  "summary": {
+    "timestamp": "20261103_205524",
+    "answer_model": "gpt-4.1-mini",
+    "judge": "gpt-4o-mini",
+    "context_precision": 0.779,
+    "context_recall": 0.875,
+    "faithfulness": 0.925,
+    "answer_relevancy": 0.849,
+    "in_scope_questions": 12,
+    "in_scope_answered": 10,
+    "in_scope_fallbacks": 2,
+    "refusal_accuracy": "3/3"
+  },
+  "rows": [
+    {
+      "question": "Who are the authors of the green flashes paper?",
+      "answer": "The authors of the paper \"Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm\" are Gilbert Green and Naomi Watanabe.",
+      "contexts": [
+        "Citation: Green, G.; Watanabe, N.\nGreen Flashes Observed in Optical\nand Infrared during an Extreme\nElectric Storm. Appl. Sci. 2024, 14,\n6938. https://doi.org/10.3390/\napp14166938\nAcademic Editors: Daniele Mestriner\nand Massimo Brignone\nReceived: 6 June 2024\nRevised: 23 July 2024\nAccepted: 31 July 2024\nPublished: 8 August 2024\nCopyright: © 2024 by the authors.\nLicensee MDPI, Basel, Switzerland.",
+        "under\nthe\nterms\nand\nconditions of the Creative Commons\nAttribution (CC BY) license (https://\ncreativecommons.org/licenses/by/\n4.0/).\napplied  \nsciences\nArticle\nGreen Flashes Observed in Optical and Infrared during an\nExtreme Electric Storm\nGilbert Green 1,2 and Naomi Watanabe 1,*\n1\nDepartment of Chemistry and Physics, Florida Gulf Coast University, 10501 FGCU Boulevard South,",
+        "What this document is about: the paper \"Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm\" (file sample.pdf) presents a study documenting the observation and analysis of unique green flashes in the sky during an electrical storm in Southwest Florida, exploring their correlation with atmospheric conditions and lightning activity. Its main topic is Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm.",
+        "12.\nMazur, V.; Shao, X.M.; Krehbiel, P.R. “Spider” lightning in intracloud and positive cloud-to-ground flashes. J. Geophys. Res. Atmos.\n1998, 103, 19811–19822. [CrossRef]\n13.\nWilliams, E.R. Problems in lightning physics—The role of polarity asymmetry. Plasma Sources Sci. Technol. 2006, 15, S91. [CrossRef]\n14.",
+        "13.\nWilliams, E.R. Problems in lightning physics—The role of polarity asymmetry. Plasma Sources Sci. Technol. 2006, 15, S91. [CrossRef]\n14.\nGreen, G.; Watanabe, N. Spider Lightning Characterization: Integrating Optical, NLDN, and GLM Detection. Atmosphere 2023,\n14, 1191. [CrossRef]\n15."
+      ],
+      "reference": "The authors are Gilbert Green and Naomi Watanabe.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.8667,
+      "context_recall": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.7654
+    },
+    {
+      "question": "What institution are the authors affiliated with?",
+      "answer": "The authors are affiliated with Florida Gulf Coast University, specifically the Department of Chemistry and Physics. Additionally, Gilbert Green is also affiliated with the Space Telescope Science Institution in Baltimore, MD. This is clearly stated in the document [Source: sample.pdf | Page 1].",
+      "contexts": [
+        "Acknowledgments: All authors thank Florida Gulf Coast University (USA), the CAS Scholarship and\nProfessional Development Fund grant, the PDF grant, and the Whitaker Center Fund grant, covering\nthe publication cost. All authors thank NOAA for providing an excellent GLM dataset.\nConflicts of Interest: The authors declare no conflicts of interest.\nAbbreviations\nET\nEastern Time (3. Results)\nGLM",
+        "acquisition, N.W. All authors have read and agreed to the published version of the manuscript.\nFunding: This research was in part supported by FGCU.\nInstitutional Review Board Statement: Not applicable.",
+        "Gilbert Green 1,2 and Naomi Watanabe 1,*\n1\nDepartment of Chemistry and Physics, Florida Gulf Coast University, 10501 FGCU Boulevard South,\nFort Myers, FL 33965, USA; gi5596@eagle.fgcu.edu or ggreen@stsci.edu\n2\nSpace Telescope Science Institution, Baltimore, MD 21218, USA\n*\nCorrespondence: nwatanabe@fgcu.edu",
+        "Appl. Sci. 2024, 14, 6938\n16 of 22\nInformed Consent Statement: Not applicable.\nData Availability Statement: The original contributions presented in the study are included in the\narticle, further inquiries can be directed to the corresponding author.\nAcknowledgments: All authors thank Florida Gulf Coast University (USA), the CAS Scholarship and",
+        "analysis, G.G. and N.W.; investigation, G.G. and N.W.; data curation, G.G.; writing—original draft\npreparation, G.G.; writing—review and editing, N.W.; visualization, G.G.; supervision, N.W.; funding\nacquisition, N.W. All authors have read and agreed to the published version of the manuscript.\nFunding: This research was in part supported by FGCU."
+      ],
+      "reference": "The authors are affiliated with Florida Gulf Coast University and the Space Telescope Science Institute.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.3333,
+      "context_recall": 1.0,
+      "faithfulness": 0.8333,
+      "answer_relevancy": 0.7306
+    },
+    {
+      "question": "What is the main topic of the paper?",
+      "answer": "The main topic of the paper is the observation and analysis of unique green flashes seen in optical and infrared wavelengths during an extreme electric storm in Southwest Florida, focusing on their connection to atmospheric conditions and lightning activity [Source: sample.pdf | Document Summary].",
+      "contexts": [
+        "What this document is about: the paper \"Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm\" (file sample.pdf) presents a study documenting the observation and analysis of unique green flashes in the sky during an electrical storm in Southwest Florida, exploring their correlation with atmospheric conditions and lightning activity. Its main topic is Green Flashes Observed in Optical and Infrared during an Extreme Electric Storm.",
+        "analysis, G.G. and N.W.; investigation, G.G. and N.W.; data curation, G.G.; writing—original draft\npreparation, G.G.; writing—review and editing, N.W.; visualization, G.G.; supervision, N.W.; funding\nacquisition, N.W. All authors have read and agreed to the published version of the manuscript.\nFunding: This research was in part supported by FGCU.",
+        "interferometer. These methods will help determine that atmospheric concentration is the\nmost significant contributor to the visual coloration observed.\nAuthor Contributions: Conceptualization, G.G. and N.W.; methodology, G.G.; software, G.G.; formal\nanalysis, G.G. and N.W.; investigation, G.G. and N.W.; data curation, G.G.; writing—original draft",
+        "8.\nGoodman, S.J.; Blakeslee, R.J.; Koshak, W.J.; Mach, D.; Bailey, J.; Buechler, D.; Carey, L.; Schultz, C.; Bateman, M.; McCaul, E., Jr.;\net al. The GOES-R geostationary lightning mapper (GLM). Atmos. Res. 2013, 125–126, 34–49. [CrossRef]\n9.\nShao, X.M.; Krehbiel, P.R. The spatial and temporal development of intracloud lightning. J. Geophys. Res. Atmos. 1986, 101,\n26641–26668. [CrossRef]\n10.",
+        "O2 and N2, in addition to the three main atoms, was found. While not observing events\nof ball lightning in these specific video frames, the color spectra observed can suggest"
+      ],
+      "reference": "The paper studies green flashes observed in optical and infrared during an extreme electric storm.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 1.0,
+      "context_recall": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What causes the green and blue colors in lightning flashes?",
+      "answer": "The green and blue colors in lightning flashes are primarily caused by emissions related to oxygen atoms and their interactions. Specifically, when a lightning discharge occurs over clean air—like above the ocean—the light that propagates can be predominantly green-blue because of the involvement of oxygen atoms emitting in those wavelengths. Another factor is the behavior of the discharge, such as changes in polarity or direction in bidirectional or recoil leaders, which leads to collisions with atomic oxygen (O), resulting in blue to emerald-green light emission.\n\nIn contrast, collisions with nitrogen molecules and ions (N2 or N2+) emit pinkish or violet light. Thus, shifts in the color during a discharge reflect changes in which atoms are being excited and the energy of the electrons involved. For example, blue and green emissions stem from oxygen atom collisions and somewhat lower-energy processes compared to violet or pink emissions from nitrogen ions.\n\nSo, green and blue colors arise chiefly from the discharge interacting with oxygen atoms, particularly in clean air or oceanic environments, and from changes in the discharge's path and polarity influencing which atomic collisions dominate [Source: sample.pdf, Pages 13-14].",
+      "contexts": [
+        "Appl. Sci. 2024, 14, 6938\n13 of 22\nOceanic flashes have higher optical power and energy [22], and it is plausible that the\noceanic flash occurring in the area transmitted the light event from a considerable distance.\nConsequently, only green-blue light may have propagated through the clean air above the\nocean, or the discharge may have interacted with more oxygen atoms, emitting blue and",
+        "other hand, when the frame shows emerald-green/blueish luminosity, it suggests that the\nenergy of the electrons involved in the collisions is lower compared to the energy levels\nassociated with the pinkish/violet luminosity. The concentration of molecules is expected\nto remain consistent over the short timescale of a lightning discharge (tens of milliseconds).",
+        "in blue to emerald-green light emission. Another assumption is that the behavior of the\ndischarge changes, such as a change in polarity or direction of the discharge path in a\nbidirectional leader or recoil leader within the cloud, causes collisions with N2 or N2+,\nemitting pinkish (light violet) or violet light, followed by collisions with O, emitting blue to\nemerald-green light.",
+        "to remain consistent over the short timescale of a lightning discharge (tens of milliseconds).\nChanges in luminous color during a lightning discharge can be caused by momentary shifts\nin the discharge’s behavior while interacting with atoms and molecules in cloud particles\nor water droplets. Additionally, abrupt changes in the concentration of these atoms and",
+        "in the nature of the flashes. In GLM measurements, bright emissions are typically caused\nby positive CG lightning strokes with high peak currents in long horizontal flashes [23].\nMost of the spectra of a return stroke, with temperature of about 30,000 K, of a CG\nflash are radiated by nitrogen ions (N2+) [24], with wavelength ranging from 400 nm to"
+      ],
+      "reference": "The colors are caused by interactions of the discharge with oxygen atoms, which emit blue to emerald-green light.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.8056,
+      "context_recall": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What date was the storm observed?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "contexts": [
+        "Citation: Green, G.; Watanabe, N.\nGreen Flashes Observed in Optical\nand Infrared during an Extreme\nElectric Storm. Appl. Sci. 2024, 14,\n6938. https://doi.org/10.3390/\napp14166938\nAcademic Editors: Daniele Mestriner\nand Massimo Brignone\nReceived: 6 June 2024\nRevised: 23 July 2024\nAccepted: 31 July 2024\nPublished: 8 August 2024\nCopyright: © 2024 by the authors.\nLicensee MDPI, Basel, Switzerland.",
+        "direction, stalled and stirred over the Southwest Florida region. A strong and fast-moving\nstorm occurred in the Southwest Florida region overnight, from 01:00 UTC on 17 April\n(21:00 ET on 16 April) to 07:00 UTC (03:00 ET) on 17 April 2023. During this time, the author\nobserved the same anomalous event three times, where the entire sky turned emerald",
+        "Figure 8 illustrates lightning events reported by GLM on 17 April 2023, with the timeframe\nranging from 04:34:09.750 UTC to 04:34:10.750 UTC, covering the observation time of the\nframes. The map displays coordinates of 26.05◦N–26.35◦N and 81.5◦W–82.05◦W, with a\ncolor scale ranging from red to violet in a 0.125 s time window. As shown in Figure 8, the",
+        "2\nSpace Telescope Science Institution, Baltimore, MD 21218, USA\n*\nCorrespondence: nwatanabe@fgcu.edu\nAbstract: A strong and fast-moving electrical storm occurred in the Southwest Florida region\novernight, from 01:00 UTC on 17 April to 07:00 UTC on 17 April 2023. Video recordings were\nconducted in the region at Latitude N 26.34◦and Longitude W 81.79◦for 5 h and 15 min, from",
+        "3.1. Event 1 on 17 April 2023 at 04:13 UTC\nA lightning event was recorded on 17 April 2023 from 04:13:03.000 UTC to 04:13:05.800\nUTC. The camera, located at the coordinates 26.3468◦N and 81.7996◦W, operated at\na frame rate of 24.88 fps, resulting in a frame-to-frame interval of 40.19 ms. A total of"
+      ],
+      "reference": "The storm was observed on 17 April 2023.",
+      "in_scope": true,
+      "refused": true,
+      "confidence": "low",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.6792,
+      "context_recall": 1.0
+    },
+    {
+      "question": "What is the role of atmospheric concentration in the observed coloration?",
+      "answer": "The atmospheric concentration plays a crucial role in the observed coloration of lightning flashes. The documents explain that variations in atmospheric molecular concentrations are directly linked to the unique spectral lines and the colored luminosity seen in the lightning events. Essentially, higher or differing concentrations of molecules in the atmosphere affect the wavelengths of light emitted or scattered during lightning, producing the distinct colors observed. Additionally, detailed meteorological analysis and spectrums observations, including interferometer measurements, help confirm that atmospheric concentration is the most significant factor contributing to the visual coloration seen in these lightning phenomena [Source: sample.pdf, Pages 1, 15].",
+      "contexts": [
+        "interferometer. These methods will help determine that atmospheric concentration is the\nmost significant contributor to the visual coloration observed.\nAuthor Contributions: Conceptualization, G.G. and N.W.; methodology, G.G.; software, G.G.; formal\nanalysis, G.G. and N.W.; investigation, G.G. and N.W.; data curation, G.G.; writing—original draft",
+        "thunderstorms, it is necessary to conduct a detailed meteorological analysis, perform spec-\ntrum observations to assess atmospheric conditions, and examine cloud flashes using an\ninterferometer. These methods will help determine that atmospheric concentration is the\nmost significant contributor to the visual coloration observed.",
+        "molecular concentrations, which ultimately contributed to the unique spectral line. In this study, we\nexplore the correlation between colored flashes and specific atmospheric concentrations.\nKeywords: spider lightning; cloud lightning; cloud-to-ground lightning; luminosity; optical energy;\nGLM; thunderstorm; spectrum\n1. Introduction",
+        "and denser, higher cloud-tops compared to Event 2, which occurred inland and involved dissipating\nstorms. Moreover, the group energy detected in Event 1 was an order of magnitude higher than in\nEvent 2. We attribute the wavelength of the recorded colored luminosity to varying atmospheric\nmolecular concentrations, which ultimately contributed to the unique spectral line. In this study, we",
+        "colored luminosity was caused by light emitted from lightning discharges.\nThe colored luminosity may be caused by the scattering, reflection, and refraction of\nlight by cloud particles. The camera’s field of view may have coincidentally been ideally\npositioned to observe this specific coloration. However, despite multiple events observed"
+      ],
+      "reference": "Atmospheric concentration is the most significant contributor to the visual coloration observed in the green flashes.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 1.0,
+      "context_recall": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.7321
+    },
+    {
+      "question": "What instruments were used in the study?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "contexts": [
+        "The characteristics of the flashes were analyzed using video images integrated with lightning flash\ndata from the Geostationary Lightning Mapper (GLM). To gain deeper insights into the associated\natmospheric conditions, the Advanced Baseline Imager (ABI) was also used to help understand the\nspectral anomalies. Both events had similarities: the same pattern of changing luminous colors in",
+        "the events within the group, and the GLM can detect with very low energy, down to\n1 femtojoule (1 fJ = 1 × 10−15 J) [43].\nIn addition to GLM data, Band 13 of the Advanced Baseline Imager (ABI), clean-IR\nbrightness temperature with a longwave of 10.3 µm, was utilized. ABI is a radiometer\ncapturing IR wavelengths ranging from 0.47 to 13.3 µm [44]. The ‘clean’-IR feature is",
+        "interferometer. These methods will help determine that atmospheric concentration is the\nmost significant contributor to the visual coloration observed.\nAuthor Contributions: Conceptualization, G.G. and N.W.; methodology, G.G.; software, G.G.; formal\nanalysis, G.G. and N.W.; investigation, G.G. and N.W.; data curation, G.G.; writing—original draft",
+        "We utilize video camera recordings of luminosity captured on 17 April 2023, and analyze\nlightning activity data reported by the GLM and ABI datasets.\n2. Materials and Methods\nThe observations were conducted in Bonita Spring, Southwest Florida, from 01:00 UTC\nto 07:00 UTC on 17 April 2023. Figure 1b displays a map of South Florida, the location of",
+        "analysis, G.G. and N.W.; investigation, G.G. and N.W.; data curation, G.G.; writing—original draft\npreparation, G.G.; writing—review and editing, N.W.; visualization, G.G.; supervision, N.W.; funding\nacquisition, N.W. All authors have read and agreed to the published version of the manuscript.\nFunding: This research was in part supported by FGCU."
+      ],
+      "reference": "The study used optical and infrared observation equipment including GLM data for lightning location mapping.",
+      "in_scope": true,
+      "refused": true,
+      "confidence": "low",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.9167,
+      "context_recall": 1.0
+    },
+    {
+      "question": "What is GLM data?",
+      "answer": "GLM data refers to information collected by the Geostationary Lightning Mapper (GLM), which is a satellite-based lightning detection system. It detects changes in cloud-top illumination and optical energy, particularly around the 777.4 nm wavelength. The GLM captures lightning events by recording optical emissions from both cloud lightning and cloud-to-ground lightning flashes at a high frame rate of 500 frames per second (2 ms intervals). The data includes details such as the location, propagation path, height of the lightning discharge, and group energy, which relates to the intensity of the flash luminosity. The GLM can detect events with very low energy, down to 1 femtojoule (1 × 10⁻¹⁵ J) [Source: sample.pdf, Pages 3-4].",
+      "contexts": [
+        "and its respective field of view represented by the light blue triangle.\nIt is equipped with GPS and timestamping to synchronize with the lightning location\nsystem data. The GLM data were utilized to analyze and identify locations of specific\ndischarges captured in the recording times and to view the entire propagation path and",
+        "height of the lightning discharge corresponding to the image.\nAdditionally, the group energy reported by the GLM was used to investigate the\nintensity of flash luminosity. The GLM is a satellite-based lightning detection system\nthat detects changes in cloud-top illumination and optical energy, specifically within the",
+        "the events within the group, and the GLM can detect with very low energy, down to\n1 femtojoule (1 fJ = 1 × 10−15 J) [43].\nIn addition to GLM data, Band 13 of the Advanced Baseline Imager (ABI), clean-IR\nbrightness temperature with a longwave of 10.3 µm, was utilized. ABI is a radiometer\ncapturing IR wavelengths ranging from 0.47 to 13.3 µm [44]. The ‘clean’-IR feature is",
+        "that detects changes in cloud-top illumination and optical energy, specifically within the\nwavelength range around 777.4 nm, capturing 500 frames per second [8], which corresponds\nto a 2 ms interval per frame. The GLM detects optical emissions from both cloud lightning\nand cloud-to-ground lightning flashes [41]. In GLM detection, an event is defined as a pixel",
+        "Acknowledgments: All authors thank Florida Gulf Coast University (USA), the CAS Scholarship and\nProfessional Development Fund grant, the PDF grant, and the Whitaker Center Fund grant, covering\nthe publication cost. All authors thank NOAA for providing an excellent GLM dataset.\nConflicts of Interest: The authors declare no conflicts of interest.\nAbbreviations\nET\nEastern Time (3. Results)\nGLM"
+      ],
+      "reference": "GLM refers to Geostationary Lightning Mapper data used to track lightning flash locations.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.0,
+      "context_recall": 0.0,
+      "faithfulness": 0.9167,
+      "answer_relevancy": 0.8575
+    },
+    {
+      "question": "What causes pinkish and violet colors in lightning?",
+      "answer": "The pinkish and violet colors in lightning are caused by collisions between high-energy electrons and nitrogen molecules (N2) or nitrogen ions (N2+). These collisions excite the electrons in those molecules to higher energy levels, and when they return to their ground state, they emit light in the pinkish to violet wavelength range [Sources: sample.pdf, Pages 10, 13, 14].\n\nSo, the initial stage of a lightning discharge tends to produce these pinkish/violet emissions due to electron collisions with nitrogen species before oxygen atoms become more involved.",
+      "contexts": [
+        "in blue to emerald-green light emission. Another assumption is that the behavior of the\ndischarge changes, such as a change in polarity or direction of the discharge path in a\nbidirectional leader or recoil leader within the cloud, causes collisions with N2 or N2+,\nemitting pinkish (light violet) or violet light, followed by collisions with O, emitting blue to\nemerald-green light.",
+        "discharge, there may be more collisions with nitrogen molecules (N2) or nitrogen ions (N2+),\nresulting in the emission of pinkish or violet light. Conversely, non-branch-like discharges\nmay involve collisions with oxygen atoms (O), emitting blue to emerald-green light. For\nthis event, the discharge path occurred in a time duration of 2.0 s in the same location. The",
+        "air, leading to better ionization of the discharge path [31]. Initially, electrons tend to collide\nwith N2 and N2+, producing emissions of pinkish (light violet) or violet light. Then, after\nthe ionization path is established, electrons start colliding with oxygen atoms, resulting\nin blue to emerald-green light emission. Another assumption is that the behavior of the",
+        "high energy are colliding with atoms and molecules. These collisions cause the electrons\nin the atoms and molecules to move to higher energy levels, resulting in the emission of\nlight with shorter wavelengths, which corresponds to the pinkish/violet color [34]. On the\nother hand, when the frame shows emerald-green/blueish luminosity, it suggests that the",
+        "other hand, when the frame shows emerald-green/blueish luminosity, it suggests that the\nenergy of the electrons involved in the collisions is lower compared to the energy levels\nassociated with the pinkish/violet luminosity. The concentration of molecules is expected\nto remain consistent over the short timescale of a lightning discharge (tens of milliseconds)."
+      ],
+      "reference": "Pinkish and violet colors are caused by collisions with nitrogen molecules and ions.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 1.0,
+      "context_recall": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9909
+    },
+    {
+      "question": "Where was the study conducted?",
+      "answer": "The study was conducted in Southwest Florida, specifically at Latitude N 26.34° and Longitude W 81.79°, with observations made in Bonita Spring, Southwest Florida [Source: sample.pdf, Pages 1 and 3].",
+      "contexts": [
+        "conducted in the region at Latitude N 26.34◦and Longitude W 81.79◦for 5 h and 15 min, from\n01:45 UTC to 07:00 UTC. The camera captured the flashes transforming from pinkish, violet, blue, and\nthen emerald green in the sky twice: the first colored flash lasted 2.0 s, and the second one lasted 0.5 s.\nThe characteristics of the flashes were analyzed using video images integrated with lightning flash",
+        "We utilize video camera recordings of luminosity captured on 17 April 2023, and analyze\nlightning activity data reported by the GLM and ABI datasets.\n2. Materials and Methods\nThe observations were conducted in Bonita Spring, Southwest Florida, from 01:00 UTC\nto 07:00 UTC on 17 April 2023. Figure 1b displays a map of South Florida, the location of",
+        "2\nSpace Telescope Science Institution, Baltimore, MD 21218, USA\n*\nCorrespondence: nwatanabe@fgcu.edu\nAbstract: A strong and fast-moving electrical storm occurred in the Southwest Florida region\novernight, from 01:00 UTC on 17 April to 07:00 UTC on 17 April 2023. Video recordings were\nconducted in the region at Latitude N 26.34◦and Longitude W 81.79◦for 5 h and 15 min, from",
+        "Acknowledgments: All authors thank Florida Gulf Coast University (USA), the CAS Scholarship and\nProfessional Development Fund grant, the PDF grant, and the Whitaker Center Fund grant, covering\nthe publication cost. All authors thank NOAA for providing an excellent GLM dataset.\nConflicts of Interest: The authors declare no conflicts of interest.\nAbbreviations\nET\nEastern Time (3. Results)\nGLM",
+        "Appl. Sci. 2024, 14, 6938\n16 of 22\nInformed Consent Statement: Not applicable.\nData Availability Statement: The original contributions presented in the study are included in the\narticle, further inquiries can be directed to the corresponding author.\nAcknowledgments: All authors thank Florida Gulf Coast University (USA), the CAS Scholarship and"
+      ],
+      "reference": "The study was conducted in Florida, with coordinates around 25.95N to 26.35N and 81.5W to 82.0W.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 1.0,
+      "context_recall": 0.5,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0
+    },
+    {
+      "question": "What journal was this paper published in?",
+      "answer": "The paper was published in the journal \"Applied Sciences\" in 2024 [Source: sample.pdf, Page 1].",
+      "contexts": [
+        "Citation: Green, G.; Watanabe, N.\nGreen Flashes Observed in Optical\nand Infrared during an Extreme\nElectric Storm. Appl. Sci. 2024, 14,\n6938. https://doi.org/10.3390/\napp14166938\nAcademic Editors: Daniele Mestriner\nand Massimo Brignone\nReceived: 6 June 2024\nRevised: 23 July 2024\nAccepted: 31 July 2024\nPublished: 8 August 2024\nCopyright: © 2024 by the authors.\nLicensee MDPI, Basel, Switzerland.",
+        "Journal of Physics: Conference Series; IOP Publishing: Bristol, UK, 2018; Volume 996, p. 012011.\n37.\nShmatov, M.L. New model and estimation of the danger of ball lightning. J. Plasma Phys. 2003, 69, 507–527. [CrossRef]\n38.\nStephan, K.D.; Krajcik, R.; Martin, R.J. Fluorescence caused by ionizing radiation from ball lightning: Observation and quantitative",
+        "Revised: 23 July 2024\nAccepted: 31 July 2024\nPublished: 8 August 2024\nCopyright: © 2024 by the authors.\nLicensee MDPI, Basel, Switzerland.\nThis article is an open access article\ndistributed\nunder\nthe\nterms\nand\nconditions of the Creative Commons\nAttribution (CC BY) license (https://\ncreativecommons.org/licenses/by/\n4.0/).\napplied  \nsciences\nArticle",
+        "J. Geophys. Res. Atmos. 1994, 99, 10787–10792. [CrossRef]\n16.\nBoccippio, D.J. The Electrification of Stratiform Anvils. Ph.D. Dissertation, Massachusetts Institute of Technology, Cambridge,\nMA, USA, 1996.\n17.\nWilliams, E.R.; Cooke, C.M.; Wright, K.A. Electrical discharge propagation in and around space charge clouds. J. Geophys. Res.\nAtmos. 1985, 90, 6059–6070. [CrossRef]\n18.",
+        "acquisition, N.W. All authors have read and agreed to the published version of the manuscript.\nFunding: This research was in part supported by FGCU.\nInstitutional Review Board Statement: Not applicable."
+      ],
+      "reference": "The paper was published in Applied Sciences (Appl. Sci.) in 2024.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "medium",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.8333,
+      "context_recall": 1.0,
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.8184
+    },
+    {
+      "question": "What is the significance of oceanic flashes in the study?",
+      "answer": "The study highlights that oceanic lightning flashes are notably different and significant compared to those over land. Specifically, oceanic flashes tend to be larger, brighter, more energetic, and are capable of longer horizontal propagation over the ocean. This suggests a fundamental physical distinction in the nature of these flashes. The higher optical power and energy of oceanic flashes potentially allows the light they emit to travel considerable distances through the clean air above the ocean. Additionally, the interaction with atmospheric oxygen may alter the color emissions, producing blue and green light in particular. These characteristics help in understanding how lightning behaves differently over oceans compared to land, which can be important for interpreting observational data and for modeling atmospheric electrical phenomena [Pages 2, 13].",
+      "contexts": [
+        "Appl. Sci. 2024, 14, 6938\n13 of 22\nOceanic flashes have higher optical power and energy [22], and it is plausible that the\noceanic flash occurring in the area transmitted the light event from a considerable distance.\nConsequently, only green-blue light may have propagated through the clean air above the\nocean, or the discharge may have interacted with more oxygen atoms, emitting blue and",
+        "Florida. In cloud regions with similar background radiances, oceanic lightning flashes tend\nto be larger, brighter, more energetic, and likely to have longer horizontal propagation over\nthe ocean than those over land [22], and these characteristics suggest a physical distinction\nin the nature of the flashes. In GLM measurements, bright emissions are typically caused",
+        "orange, yellow, light blue, and green dots occurring from 3.50 s to 4.75 s. These flashes are\nobserved over the ocean, and the first flash on land is represented by the light blue dot\noccurring at 4.999 s, almost simultaneous with the time window of the blue dots. Moreover,\nless dense clouds are observed in the region where the red to orange dots are detected,",
+        "In this stage, the rate of lightning discharges is low [17]. Spider lightning discharges are oc-\ncasionally observed in conjunction with positive CG lightning flashes [19]. Spider lightning\ndischarges have been documented both during [20] and towards the end of storms [21] in\nFlorida. In cloud regions with similar background radiances, oceanic lightning flashes tend",
+        "land were studied by [5–7]. Additionally, the relationship between lightning and thunder-\nstorm updraft growth [8] and between lightning and rainfall rates [5–7] is significant for\nunderstanding the connection between lightning activity and associated meteorological\nconditions.\nIncloud (IC) flashes typically initiate at the upper boundary of the negative charge"
+      ],
+      "reference": "Oceanic flashes have higher optical power and energy, and may transmit green-blue light through clean air above the ocean.",
+      "in_scope": true,
+      "refused": false,
+      "confidence": "high",
+      "answer_model": "gpt-4.1-mini",
+      "llm_context_precision_with_reference": 0.9167,
+      "context_recall": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5984
+    },
+    {
+      "question": "What is the capital of France?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "contexts": [
+        "line and is located near the edge of the cloud area, as illustrated in Figure 8. These dots are\nreplotted in Figure 13, representing the zoomed-in view of Figure 8, with coordinates of\n26.15◦N–26.16◦N and 81.68◦W–81.76◦W. The dots within the blue box and the pink box\nare magnified, respectively. The cluster of orange dots is displayed in the bottom right of",
+        "to 06:34:10.750 UTC. The map displays a view of the coordinates of 26.05◦N–26.35◦N and\n81.5◦W–82.05◦W. The colored dots represent the lightning flash locations, with a color scale ranging\nfrom red to violet within a 0.125 s time window. The total number of lightning detections in the\ntime window is displayed in the box at the upper right corner of the figure. Yellow and blue lines",
+        "are magnified, respectively. The cluster of orange dots is displayed in the bottom right of\nthe map. The last eight orange dots, ordered from 10 to 17, are closely situated, suggesting\nthat they propagate upward with angle, and the propagation may be branch-like. The\nlocation of the yellow, green, and light blue dots indicates that the discharge location is not",
+        "81.5◦W–82.0◦W. The colored dots represent the lightning flash locations, with a color dot scale\nranging from red to violet within a 0.25 s time window. The total number of lightning detections in\neach range window is displayed in the box at the upper right corner of the figure. Yellow and blue\nlines represent transmission lines and river/canal lines, respectively. Clean-IR brightness temperature",
+        "and its respective field of view represented by the light blue triangle.\nIt is equipped with GPS and timestamping to synchronize with the lightning location\nsystem data. The GLM data were utilized to analyze and identify locations of specific\ndischarges captured in the recording times and to view the entire propagation path and"
+      ],
+      "reference": "I could not find a reliable answer to that in the provided documents.",
+      "in_scope": false,
+      "refused": true,
+      "confidence": "low",
+      "answer_model": "gpt-4.1-mini"
+    },
+    {
+      "question": "Who won the FIFA World Cup in 2022?",
+      "answer": "I could not find a reliable answer to that in the provided documents.",
+      "contexts": [
+        "the timeframe from 04:13:03.5 UTC to 04:13:04.5 UTC.\n3.2. Event 2 on 17 April 2023 at 06:34 UTC\nThe camera recorded on 17 April 2023 from 06:34:09.6 UTC to 06:34:10.7 UTC. The\ncamera, located at the coordinates 26.3419◦N and 81.8013◦W, operated at a frame rate\nof 59.96 fps, resulting in a frame-to-frame interval of 16.67 ms. A total of 61 frames are",
+        "the specified timeframe, the section may be divided by subheadings. This should provide a\nconcise and precise description of the experimental results and their interpretation, as well\nas the experimental conclusions that are drawn.\n3.1. Event 1 on 17 April 2023 at 04:13 UTC\nA lightning event was recorded on 17 April 2023 from 04:13:03.000 UTC to 04:13:05.800",
+        "conducted in the region at Latitude N 26.34◦and Longitude W 81.79◦for 5 h and 15 min, from\n01:45 UTC to 07:00 UTC. The camera captured the flashes transforming from pinkish, violet, blue, and\nthen emerald green in the sky twice: the first colored flash lasted 2.0 s, and the second one lasted 0.5 s.\nThe characteristics of the flashes were analyzed using video images integrated with lightning flash",
+        "3.1. Event 1 on 17 April 2023 at 04:13 UTC\nA lightning event was recorded on 17 April 2023 from 04:13:03.000 UTC to 04:13:05.800\nUTC. The camera, located at the coordinates 26.3468◦N and 81.7996◦W, operated at\na frame rate of 24.88 fps, resulting in a frame-to-frame interval of 40.19 ms. A total of",
+        "aspx (accessed on 5 June 2024).\nDisclaimer/Publisher’s Note: The statements, opinions and data contained in all publications are solely those of the individual\nauthor(s) and contributor(s) and not of MDPI and/or the editor(s). MDPI and/or the editor(s) disclaim responsibility for any injury to"
+      ],
+      "reference": "I could not find a reliable answer to that in the provided documents.",
+      "in_scope": false,
+      "refused": true,
+      "confidence": "low",
+      "answer_model": "gpt-4.1-mini"
+    },
+    {
+      "question": "What is the boiling point of water?",
+      "answer": "The document you provided doesn't seem to mention the boiling point of water or anything related to it. If you have any other questions about the content in these passages, feel free to ask!",
+      "contexts": [
+        "and 81.5◦W–82.6◦. (Right) Zoomed -in view of the blue box shown in the left figure. The number of\neach dot represents its chronological order of occurrence.",
+        "flash are radiated by nitrogen ions (N2+) [24], with wavelength ranging from 400 nm to\n650 nm [25] and the spectra of a stepped leader, with temperature ranging from 15,000 K\nto 30,000 K, are radiated by neutral nitrogen (N), N2+, and neutral oxygen (O), for which\nwavelength ranged from 600 to 1050 nm [26]. The spectral lines of ionized oxygen (O+) with",
+        "UTC, as indicated by the presence of orange and yellow dots in the GLM plot in Figure 4.\nThe group energy higher than 1.00 × 10−13 J was detected as 1.22 × 10−13 J, 1.65 × 10−13 J,\nand 1.60 × 10−13 J at 4.035 s, 4.037 s, and 4.043 s, respectively, corresponding to the time\nwindow of the orange dots. Additionally, a group energy of 1.23 × 10−13 J is detected at",
+        "04:15 UTC (updated every 5 min). The scale shown below the map represents the temperature of the\ncloud-top height in degrees Celsius (◦C). The white circle in the figure indicates the area of the cluster\nof red, orange, and yellow dots during the timeframe from 06:34:09.750 UTC to 06:34:10.750 UTC.",
+        "J. Geophys. Res. Atmos. 2016, 122, 423–442. [CrossRef]\n24.\nUman, M.A. Determination of lightning temperature. J. Geophys. Res. 1969, 74, 949–957. [CrossRef]\n25.\nCen, J.; Yuan, P.; Xue, S. Observation of the optical and spectral characteristics of ball lightning. Phys. Rev. Lett. 2014, 112, 035001.\n[CrossRef] [PubMed]\n26."
+      ],
+      "reference": "I could not find a reliable answer to that in the provided documents.",
+      "in_scope": false,
+      "refused": true,
+      "confidence": "medium",
+      "answer_model": "gpt-4.1-mini"
+    }
+  ]
+}

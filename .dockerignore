@@ -14,5 +14,6 @@ db/*
 !demo_corpus/*.pdf
 eval/corpus/
 eval/results_*.json
+eval/ragas_*.json
 **/*.pdf
 !demo_corpus/*.pdf

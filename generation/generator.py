@@ -21,7 +21,8 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
             'answer': 'I could not find a reliable answer to that in the provided documents.',
             'sources': [],
             'confidence': 'low',
-            'context': ''
+            'context': '',
+            'contexts': [],
         }
 
     if 'relevance_score' in chunks[0]:
@@ -34,7 +35,10 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
             'answer': 'I could not find a reliable answer to that in the provided documents.',
             'sources': [],
             'confidence': 'low',
-            'context': ''
+            'context': '',
+            # Retrieval still happened; the confidence gate blocked the answer. Exposed so
+            # evaluation can score retrieval quality separately from the gate (RAGAS).
+            'contexts': [c['text'] for c in chunks],
         }
 
     context = build_context(chunks)
@@ -69,5 +73,6 @@ def generate_answer(query: str, chunks: list[dict], history: str = '') -> dict:
         'answer': response.choices[0].message.content,
         'sources': sources,
         'confidence': confidence,
-        'context': context
+        'context': context,
+        'contexts': [c['text'] for c in chunks],   # per-passage list, for RAGAS
     }
