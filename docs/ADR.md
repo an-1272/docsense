@@ -77,7 +77,7 @@ Status values: **Accepted** (in production code and measured), **Accepted — pe
 **Context.** With several documents in one shared index, "what does the HR2020 doc say?" searched everything, because nothing used the filename metadata stored on each chunk.
 
 **Decision.**
-1. A per-document **title/summary chunk** at ingest time gives each document an identity that queries can match.
+1. A per-document **title/summary chunk** at ingest time gives each document an identity that queries can match. It is written as **one prose sentence**, not labelled metadata: the cross-encoder reranker scored the original `Title: / Summary:` format 0.001 for "What is the main topic of the paper?" (the question it existed for) versus 0.92+ for prose. Wording was chosen by measured rerank score across phrasings. Eval moved 0.80/0.73 → **0.83/0.87** (2026-11-03).
 2. A sidebar **multi-select scope picker** passes an explicit `source_filter`.
 3. **Query-time filename detection** (`retrieval/scope_detect.py`) applies when the picker is empty. It is regex-based, **not an LLM call**: it runs on every question, so it has to be free, instant and predictable. A wrong auto-scope silently hides the correct document from retrieval, which is worse than not scoping, so it only fires on unambiguous signals: a full filename, a distinctive stem (`HR2020`, `biology-11-00233`), or a plain stem followed by a document noun ("the sample doc"). The applied scope is shown under the answer.
 

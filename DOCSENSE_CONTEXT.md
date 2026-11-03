@@ -93,6 +93,7 @@ DocSense is a production-pattern RAG (Retrieval-Augmented Generation) applicatio
 - ✅ Project 1 Week 2 — GitHub Actions + LangSmith
 - ✅ Project 1 Week 2 — Eval harness run to completion: faithfulness 0.80, answer relevancy 0.73 (both targets met) — see Session 4
 - ✅ Document identity/title-chunk fix — resolves "what does the X doc say" style queries
+- ✅ Summary chunk reworded as prose (Session 9) — fixes "main topic" questions; **eval now faithfulness 0.83 / relevancy 0.87** (2026-11-03, `eval/results_20261103_174426.json`)
 - ✅ Document-scoping UI — multi-select "Search scope" picker in sidebar (0+ docs, empty = search all), verified live — see Session 5
 - ✅ Query-time filename-detection — `retrieval/scope_detect.py`, deterministic regex, picker wins, "🎯 Auto-scoped to" caption — see Session 8 (2026-11-03)
 - ✅ Filename display — user re-checked on 2026-09-13 and confirmed filenames populate correctly everywhere. The 2026-09-12 report is not a real bug — closed, no code change needed.
@@ -189,7 +190,7 @@ Fix (partial): Increased chunk_overlap from 80 → 160 (chunk_size held at 400, 
 Real-world gap identified (not from the eval set — surfaced by reasoning about actual use case: uploading multiple company documents and asking "what does the HR2020 doc say?"). Root cause: retrieval/search.py and retrieval/pinecone_search.py both do pure content-similarity search across the *entire* index/collection, with zero use of the `source` (filename) metadata already stored on every chunk. There is no query-time filtering or boosting by document name, and no UI document picker either — every query searches every ingested document's content indiscriminately. A query naming a document by filename is just semantic noise to the embedder; it doesn't route to that document's chunks.
 Fix: Added ingestion/title_chunk.py — synthesizes one extra chunk per document at ingest time (`Document filename: X | Title: ... | Summary: ...`, via a GPT-4o-mini call over the first ~3000 chars), inserted into ingestion/__init__.py's ingest() before embedding. This chunk gives identity/topic queries something concrete and high-signal to match against.
 Verified impact (isolated retrieval test, outside the full eval set): query "What does sample.pdf say?" — title chunk relevance jumped from ~0.005 (untraceable, not even in top-20) to **0.9957** (rank 1, decisively above threshold). "What is this document about?" — **0.575**. Both cleared the 0.1 threshold with zero change to chunk size, overlap, or the threshold itself.
-Limitation: the eval dataset's exact phrasing "What is the main topic of the paper?" still doesn't reliably match the title chunk (Cohere ranks it ~0.003, outside the fixed set of questions this was validated against) — a phrasing-sensitivity quirk of the cross-encoder, not a routing failure. The core scenario (asking about a document by name) is solved; that specific eval phrasing is not.
+**[RESOLVED Session 9 — root cause was the chunk's labelled format, not phrasing; see Session 9 Issue 2]** Limitation: the eval dataset's exact phrasing "What is the main topic of the paper?" still doesn't reliably match the title chunk (Cohere ranks it ~0.003, outside the fixed set of questions this was validated against) — a phrasing-sensitivity quirk of the cross-encoder, not a routing failure. The core scenario (asking about a document by name) is solved; that specific eval phrasing is not.
 Still open: query-time filename-detection (auto-filter to a named document, i.e. inferring scope from the question text itself rather than an explicit picker) — not built. The UI document-picker was built the same day, see Session 5 below.
 
 **Issue 4: LLM-as-judge was scoring faithfulness against fake context**
@@ -269,6 +270,32 @@ Verified: repeated the exact repro after the fix — same 2 prior galaxy-classif
   - Verified locally, in the container, and live on Azure (viewer renders pages; bees question → cited High-confidence answer).
   - Gotcha: after a redeploy an already-open browser tab can keep the old Streamlit session — reload the page.
 - Ongoing cost: ACR Basic ≈ $5/month (the only always-on charge); Container App ≈ $0 idle. Teardown: `az group delete -n docsense-rg`.
+
+### Session 9 — Sources panel cleanup + summary-chunk root cause (2026-11-03, after the first deploy)
+**Issue 1: Sources column showed "Page 0" and internal storage paths**
+Reported from a live screenshot (question "What is the need for attention?" on an uploaded *Attention Is All You Need.pdf*). The Sources column listed `Page 0`, `Page 1`, `Page 3`, `Page 2`, each box containing only `uploads/Attention Is All You Need.pdf`.
+- `Page 0` is not a real page — it is the synthetic per-document title/summary chunk from `ingestion/title_chunk.py` (Session 4), stored with `page=0`. Meaningless to a reader.
+- `uploads/` / `demo_corpus/` are internal `source` metadata prefixes (they keep uploads and demo docs apart in the shared index), never meant for display.
+Fix (`app.py`, citations column): skip `page == 0` entries; show only the document name (demo docs use their `DEMO_DOCS` title); if an answer drew ONLY on the summary chunk, show "This answer drew on the document summary rather than a specific page." instead of a blank column. Deployed.
+Still open (proposed, not built): the column lists every *retrieved* chunk in rank order rather than what the answer actually *cited*, and shows no excerpt — redesign to "cited first, with the passage + Show page (highlighted)" was proposed and parked.
+
+**Issue 2 (root cause found): the summary chunk was being thrown away by the reranker for the exact question it was built for**
+Investigated why Page 0 appeared at all → measured it on 16 real questions (12 eval + 4 bees-paper) with retrieval only (`search_pinecone` → `rerank_pinecone`, top-20 → full rerank):
+- On ordinary content questions it almost never surfaces (in top-5 1/16, ranked #1 0/16) — so it is NOT hijacking normal answers.
+- But "What is the main topic of the paper?" — the question Session 4 built it for — found it in vector search (rank 10/20 on sample.pdf, **rank 1/20** on the Attention paper) and then **Cohere reranked it to #15 with score 0.001–0.002**. Top surviving chunk scored 0.009 → under the 0.1 gate → fallback. Session 4 had written this off as "a phrasing-sensitivity quirk of the cross-encoder"; it was actually the chunk's **format**.
+- Root cause: the chunk was labelled metadata (`Document filename: … / Title: … / Summary: …`). A cross-encoder scores whether a passage *reads like an answer* to the question; a label list doesn't. Same content as one prose sentence: 0.001 → **0.95**.
+- Wording was then chosen by measurement, not taste — 3 prose variants × 5 phrasings through `co.rerank`. A "This paper, titled …" variant fixed "main topic" (0.94) but dropped "What is this **document** about?" from 0.59 to 0.20 — the reranker keys on doc/paper wording. Winner: `What this document is about: the paper "<title>" (file <name>) <summary>. Its main topic is <title>.` → ≥0.92 on main-topic / document-about / paper-about / "what does <file> say". ("Summarise this file" stays low ~0.01 under every wording — summarisation is a different task than topic identification; not chased.)
+Fix: `compose_title_text(filename, model_output)` in `ingestion/title_chunk.py` — pure function (no API call) that turns the model's Title/Summary output into that sentence, handles verb-phrase vs noun-phrase summaries, keeps raw text if the model ignores the format. 4 unit tests (`tests/test_title_chunk.py`, 16/16 total pass). LLM prompt unchanged. Re-ingested `demo_corpus/sample.pdf` (from `eval/corpus/`) and the bees demo paper — chunk IDs are deterministic (`<source>_title`), so the upsert overwrote the old chunk in place, no duplicates.
+**Eval: faithfulness 0.80 → 0.83, answer relevancy 0.73 → 0.87** (`eval/results_20261103_174426.json`). "Main topic" went from fallback 0.00/0.00 to **1.00/1.00**. Remaining fails = the other two known threshold-gated questions (storm date, instruments) — unchanged by design. Institution faithfulness 0.5 this run = judge variance (1.0 in prior runs).
+Lesson: when a fix "mostly works but misses one phrasing", measure the component that's rejecting it before calling it a quirk — the reranker was telling us the chunk didn't read as an answer.
+
+**Issue 3 (open, edge case, deliberately not changed yet): confidence/critique-skip can be decided by the summary chunk**
+`generate_answer()`'s confidence and `graph.should_critique()`'s high-confidence skip both read only `chunks[0]`. When a question matches the title closely ("the need for **attention**" vs *Attention Is All You Need*), the summary chunk ranks #1 at 0.98 → badge says High and Reflection's critique is skipped, based on a summary rather than page evidence. Measured 0/16 on normal questions, so it's an edge case. Candidate fix: compute both from the best non-summary chunk. Held back because it touches the confidence logic covered by the "DO NOT simplify" rule — needs an explicit decision.
+
+**Issue 4: `.dockerignore` `*.pdf` only matched the repo root**
+After moving the old demo PDFs to `eval/corpus/`, they still ended up in the image (8 MB) — Docker ignore patterns are root-relative, so `*.pdf` never matched nested files. Fix: `eval/corpus/` excluded explicitly + `**/*.pdf` with `!demo_corpus/*.pdf`. Verified by listing the built image.
+
+**Gotcha (not a bug): a browser tab open across a redeploy keeps the old Streamlit session.** Twice "the new version isn't live" was this — Azure already had 100% traffic on the new revision (`az containerapp revision list`). Reload the page.
 
 ---
 
@@ -379,7 +406,7 @@ DO NOT lower the 0.1 threshold to force more eval questions to pass — delibera
 
 ### Document Identity — Title/Summary Chunk (added Session 4, 2026-09-12)
 Problem: retrieval was pure content-similarity search with zero use of the `source` (filename) metadata already stored on every chunk — a query naming a document ("what does the HR2020 doc say?") had no routing signal at all, and self-referential questions ("what is this document about") had nothing to match against.
-Fix: ingestion/title_chunk.py generates one extra chunk per document at ingest time — filename + GPT-4o-mini-generated title + one-sentence summary — embedded and upserted alongside content chunks (chunk_id suffix `_title`, page=0). Wired into ingestion/__init__.py's ingest().
+Fix: ingestion/title_chunk.py generates one extra chunk per document at ingest time — filename + GPT-4o-mini-generated title + one-sentence summary — **written as one prose sentence since Session 9** (`compose_title_text`; the original labelled format was scored ~0.001 by the reranker for "main topic" questions) — embedded and upserted alongside content chunks (chunk_id suffix `_title`, page=0). Wired into ingestion/__init__.py's ingest().
 Verified: "What does sample.pdf say?" → title chunk relevance 0.9957 (rank 1). "What is this document about?" → 0.575. Both clear the 0.1 threshold decisively.
 This is a per-document identity chunk, not a cross-document router — it does not yet let a query auto-select which document to search when multiple are loaded (that's the deferred document-scoping UI / filename-detection work, see Session 4 → Issue 3 "Still open").
 
