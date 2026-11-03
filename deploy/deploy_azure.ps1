@@ -80,6 +80,18 @@ $appEnv = @(
     "PINECONE_INDEX_NAME=$($envVars['PINECONE_INDEX_NAME'])",
     "USE_PINECONE=true"
 )
+if ($envVars['USE_AZURE_SEARCH'] -eq 'true') {
+    foreach ($k in "AZURE_SEARCH_ENDPOINT", "AZURE_SEARCH_KEY") {
+        if (-not $envVars[$k]) { throw "USE_AZURE_SEARCH=true but $k missing from .env" }
+    }
+    $secrets += "azure-search-key=$($envVars['AZURE_SEARCH_KEY'])"
+    $appEnv += "USE_AZURE_SEARCH=true",
+               "AZURE_SEARCH_ENDPOINT=$($envVars['AZURE_SEARCH_ENDPOINT'])",
+               "AZURE_SEARCH_KEY=secretref:azure-search-key",
+               "AZURE_SEARCH_INDEX=$(if ($envVars['AZURE_SEARCH_INDEX']) { $envVars['AZURE_SEARCH_INDEX'] } else { 'docsense' })"
+} else {
+    $appEnv += "USE_AZURE_SEARCH=false"   # explicit, so flipping .env back to false really rolls back to Pinecone
+}
 if ($envVars['LANGSMITH_API_KEY']) {
     $secrets += "langsmith-key=$($envVars['LANGSMITH_API_KEY'])"
     $appEnv += "LANGSMITH_API_KEY=secretref:langsmith-key", "LANGSMITH_TRACING=true",

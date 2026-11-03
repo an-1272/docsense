@@ -4,6 +4,7 @@ from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 from dotenv import load_dotenv
 from azure_client import get_openai_client, EMBEDDING_MODEL
+from retrieval.azure_search_utils import to_search_key
 
 load_dotenv()
 
@@ -31,7 +32,7 @@ def embed_chunks_azure_search(chunks: list[dict]):
         docs = []
         for j, c in enumerate(batch):
             docs.append({
-                'id': c['chunk_id'],
+                'id': to_search_key(c['chunk_id']),   # raw chunk_ids contain / . and spaces: invalid Azure keys
                 'text': c['text'],
                 'source': c['source'],
                 'page': c['page'],

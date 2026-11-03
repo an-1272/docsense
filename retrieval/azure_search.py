@@ -6,6 +6,7 @@ from azure.search.documents.models import VectorizedQuery
 from azure.core.credentials import AzureKeyCredential
 from dotenv import load_dotenv
 from azure_client import get_openai_client, EMBEDDING_MODEL
+from retrieval.azure_search_utils import build_source_filter
 
 load_dotenv()
 
@@ -31,13 +32,7 @@ def search_azure(query: str, n_results: int = 20, source_filter: list[str] = Non
         k_nearest_neighbors=n_results,
         fields='content_vector',
     )
-    # search.in() takes a single-char delimiter as its 3rd arg, not ',' joined
-    # into the value string — a source name containing a comma would otherwise
-    # silently split into two filter terms.
-    filter_expr = (
-        f"search.in(source, '{'|'.join(source_filter)}', '|')"
-        if source_filter else None
-    )
+    filter_expr = build_source_filter(source_filter)
     results = search_client.search(
         search_text=query,
         vector_queries=[vector_query],
