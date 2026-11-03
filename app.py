@@ -154,10 +154,10 @@ with st.sidebar:
             if meta.get('license'):
                 st.caption(meta['license'])
             b_open, b_dl = st.columns(2)
-            if b_open.button('Open', icon=':material/visibility:', key=f'open_demo_{i}', use_container_width=True):
+            if b_open.button('', icon=':material/visibility:', help='Open in viewer', key=f'open_demo_{i}', use_container_width=True):
                 show_pdf(demo_file)
             b_dl.download_button(
-                'Download', icon=':material/download:', data=get_pdf_bytes(demo_file), file_name=demo_file,
+                '', icon=':material/download:', help='Download PDF', data=get_pdf_bytes(demo_file), file_name=demo_file,
                 mime='application/pdf', key=f'dl_demo_{i}', use_container_width=True
             )
 
