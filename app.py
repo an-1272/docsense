@@ -157,7 +157,7 @@ with st.sidebar:
         doc_scope = st.multiselect(
             'Search scope',
             options=st.session_state.ingested_files,
-            help='Restrict retrieval to one or more documents. Leave empty to search all indexed documents.'
+            help='Restrict retrieval to one or more documents. Leave empty to search all documents loaded in this session.'
         )
         scope_key = tuple(sorted(doc_scope))
         if 'last_doc_scope' not in st.session_state:
@@ -228,7 +228,9 @@ with col_chat:
                             source_filter = [st.session_state.doc_sources[name] for name in doc_scope]
                         else:
                             auto_scope = detect_sources(prompt, st.session_state.doc_sources)
-                            source_filter = auto_scope or None
+                            # Never search the whole shared index: on a public deployment it
+                            # holds other visitors' uploads. "All" = all docs in THIS session.
+                            source_filter = auto_scope or list(st.session_state.doc_sources.values())
                         result = ask(
                             prompt,
                             rerank_enabled=rerank_enabled,

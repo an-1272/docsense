@@ -1,7 +1,15 @@
 venv/
-db/
 __pycache__/
 *.pyc
 .env
 .git/
+.github/
 *.md
+# db/ holds code (sessions.py) AND local data — ship the code, not the data
+db/*
+!db/__init__.py
+!db/sessions.py
+# personal notes; keep the demo corpus
+*.pdf
+!demo_corpus/*.pdf
+eval/results_*.json
