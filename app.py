@@ -41,7 +41,7 @@ print(f"init_db done: {time.time() - _start:.2f}s")
 # ── Page config ──────────────────────────────────────────
 st.set_page_config(
     page_title='DocSense',
-    page_icon='📄',
+    page_icon=':material/description:',
     layout='wide'
 )
 
@@ -90,13 +90,14 @@ if 'session_id' not in st.session_state:
 print(f"session state done: {time.time() - _start:.2f}s")
 
 # ── Helpers ──────────────────────────────────────────────
-def confidence_badge(level: str) -> str:
+def show_confidence(level: str) -> None:
     badges = {
-        'high':   '🟢 High confidence',
-        'medium': '🟡 Medium confidence',
-        'low':    '🔴 Low confidence — treat with caution',
+        'high':   ('High confidence', ':material/check_circle:', 'green'),
+        'medium': ('Medium confidence', ':material/info:', 'orange'),
+        'low':    ('Low confidence — treat with caution', ':material/error:', 'red'),
     }
-    return badges.get(level, '⚪ Unknown')
+    label, icon, color = badges.get(level, ('Unknown confidence', ':material/help:', 'gray'))
+    st.badge(label, icon=icon, color=color)
 
 # Display metadata for files in demo_corpus/ (filename -> card info).
 # A PDF dropped into demo_corpus/ without an entry here still works, just with a plain card.
@@ -120,7 +121,7 @@ def get_pdf_bytes(name: str) -> bytes | None:
     path = os.path.join('demo_corpus', name)
     return read_pdf_bytes(path) if os.path.exists(path) else None
 
-@st.dialog('📄 Document viewer', width='large')
+@st.dialog(':material/description: Document viewer', width='large')
 def show_pdf(name: str):
     st.caption(DEMO_DOCS.get(name, {}).get('title', name))
     data = get_pdf_bytes(name)
@@ -130,14 +131,14 @@ def show_pdf(name: str):
     st.pdf(data, height=720)
 
 # ── Page header ──────────────────────────────────────────
-st.title('📄 DocSense')
+st.title(':material/description: DocSense')
 st.caption('Intelligent document Q&A with source grounding')
 
 col_chat, col_citations = st.columns([2, 1])
 
 # ── Sidebar ──────────────────────────────────────────────
 with st.sidebar:
-    st.header('📁 Documents')
+    st.header(':material/folder: Documents')
 
     print(f"sidebar done: {time.time() - _start:.2f}s")
 
@@ -153,15 +154,16 @@ with st.sidebar:
             if meta.get('license'):
                 st.caption(meta['license'])
             b_open, b_dl = st.columns(2)
-            if b_open.button('Open', key=f'open_demo_{i}', use_container_width=True):
+            if b_open.button('Open', icon=':material/visibility:', key=f'open_demo_{i}', use_container_width=True):
                 show_pdf(demo_file)
             b_dl.download_button(
-                'Download', data=get_pdf_bytes(demo_file), file_name=demo_file,
+                'Download', icon=':material/download:', data=get_pdf_bytes(demo_file), file_name=demo_file,
                 mime='application/pdf', key=f'dl_demo_{i}', use_container_width=True
             )
 
     all_loaded = all(f in st.session_state.ingested_files for f in demo_files)
-    if st.button('✅ Demo loaded' if all_loaded else '▶  Load demo into DocSense',
+    if st.button('Demo loaded' if all_loaded else 'Load demo into DocSense',
+                 icon=':material/check_circle:' if all_loaded else ':material/play_arrow:',
                  use_container_width=True, disabled=all_loaded or not demo_files):
         for demo_file in demo_files:
             path = os.path.join('demo_corpus', demo_file)
@@ -190,12 +192,12 @@ with st.sidebar:
                     tmp.write(pdf_bytes)
                     tmp_path = tmp.name
                 with st.spinner(f'Processing {uploaded_file.name}...'):
-                    n = ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
+                    ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
                 os.unlink(tmp_path)
                 st.session_state.ingested_files.append(uploaded_file.name)
                 st.session_state.doc_sources[uploaded_file.name] = f"uploads/{uploaded_file.name}"
                 st.session_state.upload_bytes[uploaded_file.name] = pdf_bytes
-                st.success(f'✅ {uploaded_file.name} — {n} chunks indexed')
+                st.success(f'{uploaded_file.name} is ready — ask away', icon=':material/check_circle:')
 
     # ── Ingested files list (each openable in the viewer) ──
     if st.session_state.ingested_files:
@@ -204,7 +206,7 @@ with st.sidebar:
         for i, fname in enumerate(st.session_state.ingested_files):
             name_col, open_col = st.columns([4, 1])
             name_col.markdown(f"• {DEMO_DOCS.get(fname, {}).get('title', fname)}")
-            if open_col.button('👁', key=f'open_indexed_{i}', help='Open in viewer'):
+            if open_col.button('', icon=':material/visibility:', key=f'open_indexed_{i}', help='Open in viewer'):
                 show_pdf(fname)
 
     # ── Document scope ────────────────────────────────
@@ -236,7 +238,7 @@ with st.sidebar:
 
     # ── Clear conversation ────────────────────────────
     st.divider()
-    if st.button('🗑  Clear conversation', use_container_width=True):
+    if st.button('Clear conversation', icon=':material/delete:', use_container_width=True):
         delete_session(st.session_state.session_id)
         st.session_state.messages = []
         st.session_state.memory = create_memory()
@@ -245,28 +247,28 @@ with st.sidebar:
 
 # ── Chat column ──────────────────────────────────────────
 with col_chat:
-    st.subheader('💬 Ask a question')
+    st.subheader(':material/chat: Ask a question')
 
     if not st.session_state.ingested_files:
-        st.info('👈 Load the demo paper (open it first to see what it covers) or upload your own PDF to get started.')
+        st.info('Load the demo paper (open it first to see what it covers) or upload your own PDF to get started.', icon=':material/arrow_back:')
     else:
         # ── Conversation history ──────────────────────
         for msg in st.session_state.messages:
             with st.chat_message(msg['role']):
                 st.markdown(msg['content'])
                 if msg['role'] == 'assistant' and 'confidence' in msg:
-                    st.caption(confidence_badge(msg['confidence']))
-                    mode_label = '🔄 Re-ranked' if msg.get('rerank_enabled') else '🔍 Similarity only'
+                    show_confidence(msg['confidence'])
+                    mode_label = ':material/swap_vert: Re-ranked' if msg.get('rerank_enabled') else ':material/search: Similarity only'
                     st.caption(mode_label)
                     if msg.get('auto_scope'):
-                        st.caption(f"🎯 Auto-scoped to: {', '.join(msg['auto_scope'])}")
+                        st.caption(f":material/filter_alt: Auto-scoped to: {', '.join(msg['auto_scope'])}")
 
         # ── Context length warning ────────────────────
         if len(st.session_state.messages) > 16:
             st.warning(
-                '⚠️ This conversation is getting long. Answer quality may reduce. '
+                'This conversation is getting long. Answer quality may reduce. '
                 'Consider clearing the conversation and starting fresh.',
-                icon='⚠️'
+                icon=':material/warning:'
             )
 
         # ── Chat input ────────────────────────────────
@@ -304,8 +306,8 @@ with col_chat:
                         }
                         st.error(f'Error: {str(e)}')
                 st.markdown(result['answer'])
-                st.caption(confidence_badge(result['confidence']))
-                mode_label = '🔄 Re-ranked' if result.get('rerank_enabled') else '🔍 Similarity only'
+                show_confidence(result['confidence'])
+                mode_label = ':material/swap_vert: Re-ranked' if result.get('rerank_enabled') else ':material/search: Similarity only'
                 st.caption(mode_label)
 
             st.session_state.messages.append({
@@ -321,7 +323,7 @@ with col_chat:
 
 # ── Citations column ─────────────────────────────────────
 with col_citations:
-    st.subheader('📎 Sources')
+    st.subheader(':material/format_quote: Sources')
 
     last_sources = []
     for msg in reversed(st.session_state.messages):
@@ -340,5 +342,5 @@ with col_citations:
             key = f"{source} — Page {s['page']}"
             if key not in seen:
                 seen.add(key)
-                with st.expander(f"📄 Page {s['page']}", expanded=True):
+                with st.expander(f"Page {s['page']}", icon=':material/description:', expanded=True):
                     st.caption(source)
