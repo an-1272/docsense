@@ -7,6 +7,7 @@ import time
 _start = time.time()
 
 from db.sessions import init_db, save_session, load_session, delete_session
+from retrieval.scope_detect import detect_sources
 print(f"init_db done: {time.time() - _start:.2f}s")
 
 
@@ -200,6 +201,8 @@ with col_chat:
                     st.caption(confidence_badge(msg['confidence']))
                     mode_label = '🔄 Re-ranked' if msg.get('rerank_enabled') else '🔍 Similarity only'
                     st.caption(mode_label)
+                    if msg.get('auto_scope'):
+                        st.caption(f"🎯 Auto-scoped to: {', '.join(msg['auto_scope'])}")
 
         # ── Context length warning ────────────────────
         if len(st.session_state.messages) > 16:
@@ -218,10 +221,14 @@ with col_chat:
             with st.chat_message('assistant'):
                 with st.spinner('Searching documents...'):
                     try:
-                        source_filter = (
-                            [st.session_state.doc_sources[name] for name in doc_scope]
-                            if doc_scope else None
-                        )
+                        # Picker wins; if it's empty, infer scope from documents
+                        # named in the question itself (retrieval/scope_detect.py).
+                        auto_scope = []
+                        if doc_scope:
+                            source_filter = [st.session_state.doc_sources[name] for name in doc_scope]
+                        else:
+                            auto_scope = detect_sources(prompt, st.session_state.doc_sources)
+                            source_filter = auto_scope or None
                         result = ask(
                             prompt,
                             rerank_enabled=rerank_enabled,
@@ -229,6 +236,7 @@ with col_chat:
                             source_filter=source_filter
                         )
                     except Exception as e:
+                        auto_scope = []
                         result = {
                             'answer': 'Something went wrong while generating the answer. Please try again.',
                             'sources': [],
@@ -246,7 +254,8 @@ with col_chat:
                 'content': result['answer'],
                 'confidence': result['confidence'],
                 'sources': result['sources'],
-                'rerank_enabled': result.get('rerank_enabled')
+                'rerank_enabled': result.get('rerank_enabled'),
+                'auto_scope': [s.split('/')[-1] for s in auto_scope]
             })
             save_session(st.session_state.session_id, st.session_state.messages)
             st.rerun()
