@@ -10,3 +10,6 @@ db/
 *.pdf
 !demo_corpus/*.pdf
 !eval/corpus/*.pdf
+
+# Personal working notes (local only)
+DOCSENSE_CONTEXT.md
