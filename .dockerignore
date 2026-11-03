@@ -12,4 +12,7 @@ db/*
 # personal notes; keep the demo corpus
 *.pdf
 !demo_corpus/*.pdf
+eval/corpus/
 eval/results_*.json
+**/*.pdf
+!demo_corpus/*.pdf
