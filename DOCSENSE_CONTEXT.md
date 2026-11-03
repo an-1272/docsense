@@ -94,12 +94,14 @@ DocSense is a production-pattern RAG (Retrieval-Augmented Generation) applicatio
 - ✅ Project 1 Week 2 — Eval harness run to completion: faithfulness 0.80, answer relevancy 0.73 (both targets met) — see Session 4
 - ✅ Document identity/title-chunk fix — resolves "what does the X doc say" style queries
 - ✅ Document-scoping UI — multi-select "Search scope" picker in sidebar (0+ docs, empty = search all), verified live — see Session 5
-- ⏳ Query-time filename-detection (infer scope from question text automatically, no picker) — not started
+- ✅ Query-time filename-detection — `retrieval/scope_detect.py`, deterministic regex, picker wins, "🎯 Auto-scoped to" caption — see Session 8 (2026-11-03)
 - ✅ Filename display — user re-checked on 2026-09-13 and confirmed filenames populate correctly everywhere. The 2026-09-12 report is not a real bug — closed, no code change needed.
 - ✅ Project 2 Phase 1 — LangGraph Reflection state machine (retrieve → critique → revise → respond) replaces the linear pipeline. Eval re-verified at faithfulness 0.79 / relevancy 0.80 (matches/exceeds the original benchmark once measured fairly) — see Session 6 (2026-09-13). **Was sitting uncommitted for over a week — committed 2026-09-21** (`d6d6a2f`), re-confirmed with a fresh eval run same day (0.80/0.73, eval/results_20260921_175716.json).
 - ✅ Project 2 Phase 2–3 code — Azure OpenAI + Azure AI Search client paths written and code-verified (imports, signatures, client construction all checked with dummy credentials; existing OpenAI/Pinecone path re-confirmed unaffected via pytest + a live pipeline call). **Not live-tested against real Azure** — no resources provisioned yet. See Session 7 (2026-09-21) below.
 - 🛑 Project 2 Phase 2–3 (Azure OpenAI + Azure AI Search) — BLOCKED on actual provisioning. Still no Azure subscription / OpenAI access as of 2026-09-21 (confirmed with user). Needs, before `USE_AZURE=true` / `USE_AZURE_SEARCH=true` can be flipped on: an Azure OpenAI resource with `gpt-4o-mini` + `text-embedding-3-small` deployed, and an Azure AI Search service with a `docsense` index (fields: `id`, `text`, `source`, `page`, `content_vector` 1536-dim). See `PROJECT_2_BUILD_PLAN.pdf` Components 2–3 for exact portal steps.
-- ⏳ Project 2 Phase 4–5 — Azure Container Apps deploy, ADR (NOT STARTED, blocked on Phase 2–3)
+- ✅ Project 2 Phase 4 — **LIVE on Azure Container Apps: https://docsense.victoriousocean-b8bffaf4.uaenorth.azurecontainerapps.io** (UAE North, OpenAI + Pinecone path, scale-to-zero, max 1 replica). Deploy = `deploy/deploy_azure.ps1`. See Session 8.
+- ✅ Project 2 Phase 5 — ADR written: `docs/ADR.md` (ADR-001..009)
+- ⏳ GitHub Actions auto-deploy on push to main — not set up yet (needs an Azure service principal / OIDC federated credential as a repo secret). Deploys are manual via the script for now.
 
 ---
 
@@ -248,6 +250,20 @@ Verified: repeated the exact repro after the fix — same 2 prior galaxy-classif
 - **Verification without real Azure creds:** `pytest tests/` (5/5 pass) + a live `ask()` call against the real OpenAI/Pinecone path (both untouched by default, `USE_AZURE`/`USE_AZURE_SEARCH` unset) confirm nothing broke. Separately, constructed `AzureOpenAI`, `AzureChatOpenAI`, and both new Azure Search modules with dummy env vars to confirm they import and build correctly — this checks the code is *structurally* right, not that it actually works against real Azure, which needs real resources.
 - `.env` got a commented-out `AZURE_*`/`USE_AZURE*` block appended (inactive) documenting exactly what to fill in once resources exist.
 - **User confirmed 2026-09-21: still no Azure subscription/OpenAI access.** Next real step is on the user's side — provision in the Azure Portal per `PROJECT_2_BUILD_PLAN.pdf` Components 2–3, then flip `USE_AZURE=true` / `USE_AZURE_SEARCH=true` in `.env` and re-run the eval harness as the actual first live test.
+
+### Session 8 — Filename detection, ADR, first live deploy to Azure Container Apps (2026-11-03)
+- Pushed 3 previously unpushed commits (LangGraph + Azure code had never reached GitHub). Committed the 2026-09-13 Poppins font change. Personal prep PDFs now gitignored (`*.pdf`, except `demo_corpus/*.pdf`).
+- **Query-time filename detection** — `retrieval/scope_detect.py` `detect_sources(query, doc_sources)`. Regex, no LLM call (runs every question; must be free, instant, predictable — a wrong auto-scope hides the right doc). Fires only on: full filename; distinctive stem (has digit/separator, e.g. HR2020, biology-11-00233, separators interchangeable); or plain stem + document noun ("the sample doc"). "give me a sample of…" does NOT scope. 7 unit tests in `tests/test_scope_detect.py` (12/12 total pass). Wired into `app.py`; auto-scope stored on the message (`auto_scope`) so the caption survives `st.rerun()`.
+- **ADR** — `docs/ADR.md`, 9 entries incl. the reflection-corrupting-a-correct-answer bug and the eval corpus-drift lesson.
+- **Two deploy-blocking bugs found and fixed before going public:**
+  1. `.dockerignore` excluded all of `db/` — including `db/sessions.py` (code). Image only ever worked locally because docker-compose mounts `./db`. Now ships `db/__init__.py` + `db/sessions.py`, excludes the data (`chroma.sqlite3`, `sessions.db`, chroma dirs), personal PDFs, eval results.
+  2. **Cross-visitor data exposure:** empty scope picker passed `source_filter=None` = search the WHOLE shared Pinecone index. On a public URL, visitor B could retrieve chunks from visitor A's uploaded PDF. Now an empty picker = all docs loaded in THIS Streamlit session (`list(doc_sources.values())`). Help text updated.
+- Dockerfile CMD now `--server.port 8501 --server.headless true`.
+- **Azure:** free account created (subscription "Azure subscription 1"). Azure CLI 2.92 installed via winget (`C:\Program Files\Microsoft SDKs\Azure\CLI2\wbinz.cmd`, not on Git-Bash PATH). Providers registered: Microsoft.App, Microsoft.OperationalInsights, Microsoft.ContainerRegistry. Docker Desktop lives at `%LOCALAPPDATA%\Programs\DockerDesktop\`.
+- **Deploy (`deploy/deploy_azure.ps1`, re-runnable):** image built LOCALLY (ACR cloud builds are often blocked on free-trial subs) → pushed to ACR Basic (`docsense<random>` in `docsense-rg`) → Container Apps env `docsense-env` → app `docsense`, target port 8501, external ingress, min 0 / max 1 replicas, 1 vCPU / 2 GiB. Keys read from `.env` → Container App **secrets** (`openai-key`, `cohere-key`, `pinecone-key`, `langsmith-key`) → env vars via `secretref:`. Nothing secret in the image (verified: no `/app/.env`, no personal PDFs). Second run = new timestamp tag + `containerapp update`.
+- **Verified live** in browser: UI + WebSocket OK, Load Demo ingests both PDFs, "What does sample.pdf say about the authors' institution?" → correct FGCU answer, cited p.15/16, 🟢 High, 🔄 Re-ranked, 🎯 Auto-scoped to: sample.pdf.
+- **Known limits:** SQLite sessions are on ephemeral container disk (reset on scale-to-zero/restart — fix = Azure Files mount); cold start on first visit after idle; public URL spends the owner's OpenAI/Cohere keys → **set an OpenAI monthly budget cap**. Every "Load Demo" re-embeds (idempotent upsert by chunk_id, just costs a few cents).
+- Ongoing cost: ACR Basic ≈ $5/month (the only always-on charge); Container App ≈ $0 idle. Teardown: `az group delete -n docsense-rg`.
 
 ---
 
@@ -537,4 +553,5 @@ Python · OpenAI · Cohere Rerank · Pinecone · LangChain · LangSmith · Docke
 - Integrated conversation memory (SimpleSummaryMemory with SQLite persistence) and query rewriting for context-aware multi-turn retrieval
 - Containerised with Docker; CI/CD via GitHub Actions (automated tests on every push); LangSmith tracing for end-to-end observability
 - LLM-as-judge evaluation harness scoring faithfulness and answer relevancy across 15-question fixed test set
-- In Progress: LangGraph reflection agent rewrite with Azure OpenAI and Azure AI Search migration
+- LangGraph Reflection agent (retrieve → critique → revise → respond); deployed on Azure Container Apps (scale-to-zero, secrets-managed); Architecture Decision Record documenting 9 design choices
+- In Progress: Azure OpenAI + Azure AI Search backends (code complete behind feature flags, pending provisioning)
