@@ -131,78 +131,76 @@ def show_pdf(name: str):
     st.pdf(data, height=720)
 
 # ── Page header ──────────────────────────────────────────
-st.title(':material/description: DocSense')
+st.title(':material/description: DocSense', anchor=False)
 st.caption('Intelligent document Q&A with source grounding')
 
 col_chat, col_citations = st.columns([2, 1])
 
 # ── Sidebar ──────────────────────────────────────────────
 with st.sidebar:
-    st.header(':material/folder: Documents')
+    st.header(':material/folder: Documents', anchor=False)
 
     print(f"sidebar done: {time.time() - _start:.2f}s")
 
-    # ── Demo document ─────────────────────────────────
-    st.caption('Try it with a demo paper. Open it to see what you can ask about:')
-    demo_files = sorted(f for f in os.listdir('demo_corpus') if f.endswith('.pdf'))
-    for i, demo_file in enumerate(demo_files):
-        meta = DEMO_DOCS.get(demo_file, {})
-        with st.container(border=True):
-            st.markdown(f"**{meta.get('title', demo_file)}**")
-            if meta.get('byline'):
-                st.caption(meta['byline'])
-            if meta.get('license'):
-                st.caption(meta['license'])
-            b_open, b_dl = st.columns(2)
-            if b_open.button('', icon=':material/visibility:', help='Open in viewer', key=f'open_demo_{i}', use_container_width=True):
-                show_pdf(demo_file)
-            b_dl.download_button(
-                '', icon=':material/download:', help='Download PDF', data=get_pdf_bytes(demo_file), file_name=demo_file,
-                mime='application/pdf', key=f'dl_demo_{i}', use_container_width=True
-            )
+    # ── Get started: upload first, demo as the alternative ──
+    with st.container(border=True):
+        uploaded_files = st.file_uploader(
+            'Upload your own PDFs',
+            type='pdf',
+            accept_multiple_files=True
+        )
 
-    all_loaded = all(f in st.session_state.ingested_files for f in demo_files)
-    if st.button('Demo loaded' if all_loaded else 'Load demo into DocSense',
-                 icon=':material/check_circle:' if all_loaded else ':material/play_arrow:',
-                 use_container_width=True, disabled=all_loaded or not demo_files):
-        for demo_file in demo_files:
-            path = os.path.join('demo_corpus', demo_file)
-            if demo_file not in st.session_state.ingested_files:
-                with st.spinner('Loading demo paper...'):
-                    ingest(path, source_name=f"demo_corpus/{demo_file}")
-                    st.session_state.ingested_files.append(demo_file)
-                    st.session_state.doc_sources[demo_file] = f"demo_corpus/{demo_file}"
-        st.session_state.demo_mode = True
-        st.rerun()
+        if uploaded_files:
+            for uploaded_file in uploaded_files:
+                if uploaded_file.name not in st.session_state.ingested_files:
+                    pdf_bytes = uploaded_file.getvalue()
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+                        tmp.write(pdf_bytes)
+                        tmp_path = tmp.name
+                    with st.spinner(f'Processing {uploaded_file.name}...'):
+                        ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
+                    os.unlink(tmp_path)
+                    st.session_state.ingested_files.append(uploaded_file.name)
+                    st.session_state.doc_sources[uploaded_file.name] = f"uploads/{uploaded_file.name}"
+                    st.session_state.upload_bytes[uploaded_file.name] = pdf_bytes
+                    st.success(f'{uploaded_file.name} is ready. Ask away!', icon=':material/check_circle:')
 
-    st.divider()
+        st.caption('or try the demo paper')
+        demo_files = sorted(f for f in os.listdir('demo_corpus') if f.endswith('.pdf'))
+        all_loaded = all(f in st.session_state.ingested_files for f in demo_files)
+        c_load, c_info = st.columns([3, 1], vertical_alignment='center', gap='small')
+        if c_load.button('Demo loaded' if all_loaded else 'Load demo',
+                         icon=':material/check_circle:' if all_loaded else ':material/play_arrow:',
+                         use_container_width=True, disabled=all_loaded or not demo_files):
+            for demo_file in demo_files:
+                path = os.path.join('demo_corpus', demo_file)
+                if demo_file not in st.session_state.ingested_files:
+                    with st.spinner('Loading demo paper...'):
+                        ingest(path, source_name=f"demo_corpus/{demo_file}")
+                        st.session_state.ingested_files.append(demo_file)
+                        st.session_state.doc_sources[demo_file] = f"demo_corpus/{demo_file}"
+            st.session_state.demo_mode = True
+            st.rerun()
 
-    # ── File uploader ─────────────────────────────────
-    uploaded_files = st.file_uploader(
-        'Upload your own PDFs',
-        type='pdf',
-        accept_multiple_files=True
-    )
-
-    if uploaded_files:
-        for uploaded_file in uploaded_files:
-            if uploaded_file.name not in st.session_state.ingested_files:
-                pdf_bytes = uploaded_file.getvalue()
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-                    tmp.write(pdf_bytes)
-                    tmp_path = tmp.name
-                with st.spinner(f'Processing {uploaded_file.name}...'):
-                    ingest(tmp_path, source_name=f"uploads/{uploaded_file.name}")
-                os.unlink(tmp_path)
-                st.session_state.ingested_files.append(uploaded_file.name)
-                st.session_state.doc_sources[uploaded_file.name] = f"uploads/{uploaded_file.name}"
-                st.session_state.upload_bytes[uploaded_file.name] = pdf_bytes
-                st.success(f'{uploaded_file.name} is ready. Ask away!', icon=':material/check_circle:')
+        with c_info.popover('', icon=':material/info:', help='About the demo paper', use_container_width=True):
+            for i, demo_file in enumerate(demo_files):
+                meta = DEMO_DOCS.get(demo_file, {})
+                st.markdown(f"**{meta.get('title', demo_file)}**")
+                if meta.get('byline'):
+                    st.caption(meta['byline'])
+                if meta.get('license'):
+                    st.caption(meta['license'])
+                b_open, b_dl = st.columns(2)
+                if b_open.button('Open', icon=':material/visibility:', key=f'open_demo_{i}', use_container_width=True):
+                    show_pdf(demo_file)
+                b_dl.download_button(
+                    'Download', icon=':material/download:', data=get_pdf_bytes(demo_file), file_name=demo_file,
+                    mime='application/pdf', key=f'dl_demo_{i}', use_container_width=True
+                )
 
     # ── Ingested files list (each openable in the viewer) ──
     if st.session_state.ingested_files:
-        st.divider()
-        st.caption('Indexed documents:')
+        st.caption('Your documents')
         for i, fname in enumerate(st.session_state.ingested_files):
             name_col, open_col = st.columns([4, 1])
             name_col.markdown(f"• {DEMO_DOCS.get(fname, {}).get('title', fname)}")
@@ -212,7 +210,6 @@ with st.sidebar:
     # ── Document scope ────────────────────────────────
     doc_scope = []
     if st.session_state.ingested_files:
-        st.divider()
         doc_scope = st.multiselect(
             'Search scope',
             options=st.session_state.ingested_files,
@@ -229,15 +226,14 @@ with st.sidebar:
 
     # ── Retrieval settings ────────────────────────────
     st.divider()
-    st.caption('Retrieval settings')
-    rerank_enabled = st.toggle(
-        'Enable re-ranking (Cohere)',
-        value=True,
-        help='Two-stage retrieval: similarity search → Cohere Rerank. Higher quality, one extra API call per query.'
-    )
+    with st.expander('Settings', icon=':material/tune:'):
+        rerank_enabled = st.toggle(
+            'Enable re-ranking (Cohere)',
+            value=True,
+            help='Two-stage retrieval: similarity search → Cohere Rerank. Higher quality, one extra API call per query.'
+        )
 
     # ── Clear conversation ────────────────────────────
-    st.divider()
     if st.button('Clear conversation', icon=':material/delete:', use_container_width=True):
         delete_session(st.session_state.session_id)
         st.session_state.messages = []
@@ -247,10 +243,10 @@ with st.sidebar:
 
 # ── Chat column ──────────────────────────────────────────
 with col_chat:
-    st.subheader(':material/chat: Ask a question')
+    st.subheader(':material/chat: Ask a question', anchor=False)
 
     if not st.session_state.ingested_files:
-        st.info('Load the demo paper (open it first to see what it covers) or upload your own PDF to get started.', icon=':material/arrow_back:')
+        st.info('Load the demo paper or upload your own PDF to get started.', icon=':material/arrow_back:')
     else:
         # ── Conversation history ──────────────────────
         for msg in st.session_state.messages:
@@ -323,7 +319,7 @@ with col_chat:
 
 # ── Citations column ─────────────────────────────────────
 with col_citations:
-    st.subheader(':material/format_quote: Sources')
+    st.subheader(':material/format_quote: Sources', anchor=False)
 
     last_sources = []
     for msg in reversed(st.session_state.messages):
