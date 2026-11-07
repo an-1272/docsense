@@ -1,0 +1,3 @@
+[client]
+# Hide the developer toolbar (Deploy button, three-dot menu) on the public app.
+toolbarMode = "minimal"
